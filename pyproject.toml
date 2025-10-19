@@ -8,9 +8,9 @@ readme = "README.md"
 packages = [{include = "underdog"}]
 
 [tool.poetry.dependencies]
-python = "^3.11"  # pyhon-version
+python = "^3.13, <4.0"  # pyhon-version
 # Conectividad y Asíncrono
-pyzmq = "^25.1.2"        # zeromq-bindings-for-python
+pyzmq = "^27.1.0"        # zeromq-bindings-for-python
 tenacity = "^8.2.3"      # robust-retry-logic
 metatrader5 = "^5.0.45"  # official-python-library-metatrader5
 
