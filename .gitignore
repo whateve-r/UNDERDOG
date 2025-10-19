@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+.env/
+venv/
+
+# Poetry
+poetry.lock
+
+# IDEs
+.vscode/
+.idea/
+
+# Data / logs
+*.csv
+*.parquet
+*.log

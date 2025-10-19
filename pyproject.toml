@@ -1,0 +1,41 @@
+[tool.poetry]
+name = "UNDERDOG"
+version = "0.1.0"
+description = "ALGORITHMIC TRADING SYSTEM FOR UNDERDOGS."
+authors = ["whateve-r"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "underdog"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"  # pyhon-version
+# Conectividad y Asíncrono
+pyzmq = "^25.1.2"        # zeromq-bindings-for-python
+tenacity = "^8.2.3"      # robust-retry-logic
+metatrader5 = "^5.0.45"  # official-python-library-metatrader5
+
+# Datos y Alto Rendimiento
+pandas = "^2.2.2"        # time-series-manager
+numpy = "^1.26.4"        # vector-compute
+
+# Análisis Cuantitativo
+statsmodels = "^0.14.2"  # 
+scikit-learn = "^1.4.2"  # ml
+
+# Configuración y Logging
+pyyaml = "^6.0.1"        # .yaml-files
+
+# Base de Datos (Opcional)
+# influxdb-client = "^2.0.0"
+# psycopg2-binary = "^2.9.9"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.2"        # unitary-tests
+flake8 = "^7.1.0"        # linting
+mypy = "^1.10.0"         # type-checking
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+ta-lib = { version = "*", optional = true }
