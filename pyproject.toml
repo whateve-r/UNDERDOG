@@ -28,6 +28,7 @@ pyyaml = "^6.0.1"        # .yaml-files
 # Base de Datos (Opcional)
 # influxdb-client = "^2.0.0"
 # psycopg2-binary = "^2.9.9"
+tornado = ">=6.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.2"        # unitary-tests
