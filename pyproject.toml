@@ -64,15 +64,19 @@ httpx = "^0.27.0"              # async-http-client
 # News Sentiment Analysis (100% GRATUITO)
 nltk = "^3.9.1"                # vader-sentiment-nltk
 textblob = "^0.18.0"           # simple-sentiment-analysis
-# transformers = "^4.40.0"     # finbert-huggingface (opcional, más pesado)
-# torch = "^2.3.0"             # pytorch-for-transformers (opcional)
+transformers = "^4.40.0"       # finbert-huggingface-for-advanced-sentiment
+torch = "^2.3.0"               # pytorch-for-transformers
 
 # Reddit Scraping (100% GRATUITO)
-# praw = "^7.8.1"              # reddit-api-wrapper (opcional)
+praw = "^7.8.1"                # reddit-api-wrapper
 
 # Additional Scientific Computing
 scipy = "^1.14.0"              # scientific-computing-for-statistics
 tqdm = "^4.66.5"               # progress-bars
+
+# ML Libraries (Libro recomendado)
+xgboost = "^2.0.0"             # gradient-boosting-trees
+# tensorflow = "^2.15.0"       # deep-learning-framework (opcional, muy pesado)
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.2"          # unitary-tests
