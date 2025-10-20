@@ -459,13 +459,19 @@ class MonteCarloSimulator:
         gross_loss = np.sum(np.abs(losses)) if len(losses) > 0 else 0.0
         profit_factor = gross_profit / gross_loss if gross_loss > 0 else 0.0
         
+        # Calmar Ratio (CAGR / Max Drawdown)
+        cagr = total_return * 252 / len(trades) if len(trades) > 0 else 0.0
+        calmar_ratio = (cagr / max_dd) if max_dd > 0 else 0.0
+        
         return {
             'total_return': float(total_return),
             'sharpe_ratio': float(sharpe),
             'max_drawdown': float(max_dd),
             'win_rate': float(win_rate * 100),
             'profit_factor': float(profit_factor),
-            'num_trades': int(len(trades))
+            'num_trades': int(len(trades)),
+            'cagr': float(cagr),
+            'calmar_ratio': float(calmar_ratio)
         }
     
     def _calculate_percentiles(self, distributions: Dict[str, np.ndarray]) -> Dict[str, Dict[float, float]]:

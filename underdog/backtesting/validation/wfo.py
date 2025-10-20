@@ -446,6 +446,10 @@ class WalkForwardOptimizer:
         drawdown = running_max - cumulative
         max_drawdown = np.max(drawdown) if len(drawdown) > 0 else 0.0
         
+        # CAGR and Calmar Ratio
+        cagr = float(total_return * 252 / num_trades) if num_trades > 0 else 0.0
+        calmar_ratio = (cagr / max_drawdown) if max_drawdown > 0 else 0.0
+        
         return {
             'sharpe_ratio': float(sharpe_ratio),
             'sortino_ratio': float(sortino_ratio),
@@ -456,7 +460,8 @@ class WalkForwardOptimizer:
             'max_drawdown': float(max_drawdown),
             'total_return': float(total_return),
             'num_trades': int(num_trades),
-            'cagr': float(total_return * 252 / num_trades) if num_trades > 0 else 0.0
+            'cagr': float(cagr),
+            'calmar_ratio': float(calmar_ratio)
         }
     
     def _aggregate_results(self, folds: List[WFOFold]) -> WFOResult:
