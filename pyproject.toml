@@ -17,7 +17,7 @@ metatrader5 = "^5.0.45"  # official-python-library-metatrader5
 
 # Datos y Alto Rendimiento
 pandas = "^2.2.2"        # time-series-manager
-numpy = "^1.26.4"        # vector-compute
+numpy = "^2.1.0"         # vector-compute (updated for TensorFlow 2.20)
 
 # Análisis Cuantitativo
 statsmodels = "^0.14.2"  # statistical-models
@@ -77,6 +77,8 @@ tqdm = "^4.66.5"               # progress-bars
 # ML Libraries (Libro recomendado)
 xgboost = "^2.0.0"             # gradient-boosting-trees
 # tensorflow = "^2.15.0"       # deep-learning-framework (opcional, muy pesado)
+tensorflow = "^2.20.0"
+redis = "^6.4.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.2"          # unitary-tests
