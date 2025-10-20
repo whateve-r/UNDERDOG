@@ -9,10 +9,10 @@
 ## 🎯 PROGRESO GENERAL
 
 ```
-[████░░░░░░] 40% - En planificación
+[██████░░░░] 60% - Fase 1 completada ✅
 ```
 
-- [ ] Fase 1: Limpieza (0/7)
+- [x] Fase 1: Limpieza (7/7) ✅ **COMPLETADA**
 - [ ] Fase 2: Datos (0/15)
 - [ ] Fase 3: MT5 (0/20)
 - [ ] Fase 4: Config (0/5)
@@ -21,21 +21,33 @@
 
 ---
 
-## 📝 FASE 1: LIMPIEZA (1.5-2.5h)
+## 📝 FASE 1: LIMPIEZA (1.5-2.5h) ✅ **COMPLETADA**
 
-### 1.1 EAs No Utilizados
-- [ ] Listar archivos en `underdog/expert_advisors/`
-- [ ] Crear carpeta `_archived/`
-- [ ] Mover EAs no usados
-- [ ] Actualizar imports
-- [ ] Ejecutar tests
-- [ ] Commit cambios
+### 1.1 EAs No Utilizados ✅
+- [x] Listar archivos en `underdog/strategies/`
+- [x] Crear carpeta `_archived/`
+- [x] Mover EAs no usados (sin v4)
+- [x] Actualizar imports
+- [x] Ejecutar tests
+- [x] Commit cambios
 
-### 1.2 Documentación
-- [ ] Mover `.md` a `docs/setup/`, `docs/troubleshooting/`, `docs/monitoring/`
-- [ ] Crear `docs/README.md` con índice
-- [ ] Actualizar enlaces
-- [ ] Commit cambios
+**Archivados**:
+- ✅ `ea_parabolic_ema.py` → `_archived/` (tenemos `ea_parabolic_ema_v4.py`)
+- ✅ `ea_supertrend_rsi.py` → `_archived/` (tenemos `ea_supertrend_rsi_v4.py`)
+
+### 1.2 Documentación ✅
+- [x] Mover `.md` a `docs/setup/`, `docs/troubleshooting/`
+- [x] Crear `docs/README.md` con índice
+- [x] Actualizar enlaces
+- [x] Commit cambios
+
+**Reorganizados**:
+- ✅ 3 archivos → `docs/setup/` (CHECKLIST_STARTUP, DEMO_GUIDE, DEMO_STATUS)
+- ✅ 7 archivos → `docs/troubleshooting/` (FIREWALL_*, GRAFANA_*, SOLUCION_MANUAL)
+- ✅ 4 archivos → `docs/` (ESTADO_ACTUAL, TESTING_COMPLETE, PRODUCTION_CHECKLIST, ROADMAP_PRODUCTION)
+- ✅ Creado `docs/README.md` con índice completo
+
+**Commit**: `5328ac9` - refactor: Phase 1 cleanup
 
 **Comandos rápidos**:
 ```bash
