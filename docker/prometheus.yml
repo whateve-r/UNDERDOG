@@ -1,0 +1,47 @@
+# =============================================================================
+# Prometheus Configuration for UNDERDOG Trading System
+# Scrapes metrics from FastAPI dashboard
+# =============================================================================
+
+global:
+  scrape_interval: 15s  # Scrape every 15 seconds
+  evaluation_interval: 15s  # Evaluate rules every 15 seconds
+  external_labels:
+    monitor: 'underdog-trading'
+    environment: 'production'
+
+# Alertmanager configuration (optional)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#             - alertmanager:9093
+
+# Rule files (optional)
+# rule_files:
+#   - "alerts.yml"
+
+# Scrape configurations
+scrape_configs:
+  # UNDERDOG Trading Application
+  - job_name: 'underdog'
+    static_configs:
+      - targets: ['underdog:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # PostgreSQL/TimescaleDB (requires postgres_exporter - optional)
+  # - job_name: 'timescaledb'
+  #   static_configs:
+  #     - targets: ['postgres-exporter:9187']
+
+  # Docker container metrics (requires cAdvisor - optional)
+  # - job_name: 'docker'
+  #   static_configs:
+  #     - targets: ['cadvisor:8080']

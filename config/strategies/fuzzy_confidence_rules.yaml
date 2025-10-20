@@ -1,0 +1,279 @@
+# Fuzzy Logic Rules for Confidence Scoring
+# This file defines the fuzzy inference system for transforming
+# ML outputs and indicators into actionable confidence scores
+
+input_variables:
+  - name: ml_prob
+    range: [0.0, 1.0]
+    sets:
+      - label: low
+        mf:
+          type: trapezoidal
+          a: 0.0
+          b: 0.0
+          c: 0.4
+          d: 0.5
+      
+      - label: medium
+        mf:
+          type: triangular
+          a: 0.4
+          b: 0.5
+          c: 0.6
+      
+      - label: high
+        mf:
+          type: trapezoidal
+          a: 0.5
+          b: 0.6
+          c: 1.0
+          d: 1.0
+  
+  - name: atr_ratio
+    range: [0.0, 3.0]
+    sets:
+      - label: low
+        mf:
+          type: trapezoidal
+          a: 0.0
+          b: 0.0
+          c: 0.5
+          d: 1.0
+      
+      - label: normal
+        mf:
+          type: triangular
+          a: 0.8
+          b: 1.0
+          c: 1.2
+      
+      - label: high
+        mf:
+          type: trapezoidal
+          a: 1.0
+          b: 1.5
+          c: 3.0
+          d: 3.0
+  
+  - name: momentum
+    range: [-1.0, 1.0]
+    sets:
+      - label: negative
+        mf:
+          type: trapezoidal
+          a: -1.0
+          b: -1.0
+          c: -0.3
+          d: 0.0
+      
+      - label: neutral
+        mf:
+          type: triangular
+          a: -0.2
+          b: 0.0
+          c: 0.2
+      
+      - label: positive
+        mf:
+          type: trapezoidal
+          a: 0.0
+          b: 0.3
+          c: 1.0
+          d: 1.0
+  
+  - name: volume_ratio
+    range: [0.0, 3.0]
+    sets:
+      - label: low
+        mf:
+          type: trapezoidal
+          a: 0.0
+          b: 0.0
+          c: 0.5
+          d: 0.8
+      
+      - label: normal
+        mf:
+          type: triangular
+          a: 0.7
+          b: 1.0
+          c: 1.3
+      
+      - label: high
+        mf:
+          type: trapezoidal
+          a: 1.2
+          b: 1.5
+          c: 3.0
+          d: 3.0
+
+output_variables:
+  - name: confidence
+    range: [0.0, 1.0]
+    sets:
+      - label: very_low
+        mf:
+          type: trapezoidal
+          a: 0.0
+          b: 0.0
+          c: 0.2
+          d: 0.3
+      
+      - label: low
+        mf:
+          type: triangular
+          a: 0.2
+          b: 0.35
+          c: 0.5
+      
+      - label: medium
+        mf:
+          type: triangular
+          a: 0.4
+          b: 0.5
+          c: 0.6
+      
+      - label: high
+        mf:
+          type: triangular
+          a: 0.5
+          b: 0.65
+          c: 0.8
+      
+      - label: very_high
+        mf:
+          type: trapezoidal
+          a: 0.7
+          b: 0.8
+          c: 1.0
+          d: 1.0
+
+rules:
+  # High confidence rules
+  - if:
+      - var: ml_prob
+        set: high
+      - var: atr_ratio
+        set: normal
+      - var: momentum
+        set: positive
+      - var: volume_ratio
+        set: normal
+    then:
+      var: confidence
+      set: very_high
+    weight: 1.0
+    operator: AND
+  
+  - if:
+      - var: ml_prob
+        set: high
+      - var: atr_ratio
+        set: normal
+      - var: momentum
+        set: positive
+    then:
+      var: confidence
+      set: very_high
+    weight: 0.95
+    operator: AND
+  
+  - if:
+      - var: ml_prob
+        set: high
+      - var: atr_ratio
+        set: normal
+    then:
+      var: confidence
+      set: high
+    weight: 0.9
+    operator: AND
+  
+  # Medium confidence rules
+  - if:
+      - var: ml_prob
+        set: medium
+      - var: momentum
+        set: positive
+      - var: atr_ratio
+        set: normal
+    then:
+      var: confidence
+      set: high
+    weight: 0.8
+    operator: AND
+  
+  - if:
+      - var: ml_prob
+        set: medium
+      - var: momentum
+        set: positive
+    then:
+      var: confidence
+      set: medium
+    weight: 0.7
+    operator: AND
+  
+  - if:
+      - var: ml_prob
+        set: medium
+      - var: atr_ratio
+        set: normal
+    then:
+      var: confidence
+      set: medium
+    weight: 0.7
+    operator: AND
+  
+  # Low confidence rules
+  - if:
+      - var: ml_prob
+        set: low
+    then:
+      var: confidence
+      set: very_low
+    weight: 1.0
+    operator: AND
+  
+  - if:
+      - var: atr_ratio
+        set: high
+    then:
+      var: confidence
+      set: low
+    weight: 0.9
+    operator: AND
+  
+  - if:
+      - var: momentum
+        set: negative
+      - var: ml_prob
+        set: medium
+    then:
+      var: confidence
+      set: low
+    weight: 0.8
+    operator: AND
+  
+  # Volume-based adjustments
+  - if:
+      - var: volume_ratio
+        set: high
+      - var: ml_prob
+        set: high
+    then:
+      var: confidence
+      set: very_high
+    weight: 1.0
+    operator: AND
+  
+  - if:
+      - var: volume_ratio
+        set: low
+      - var: ml_prob
+        set: high
+    then:
+      var: confidence
+      set: medium
+    weight: 0.8
+    operator: AND

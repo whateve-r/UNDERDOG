@@ -41,21 +41,55 @@ class HistoricalData:
     symbol: Optional[str] = None
     timeframe: Optional[str] = None
 
-def load_connector_config() -> Dict[str, Any]:
+def load_connector_config(config_path: Optional[str] = None) -> Dict[str, Any]:
     """
-    Simula la carga de configuración. 
+    Carga configuración desde YAML. Soporta path personalizado o usa default.
     
-    *** ¡ADVERTENCIA CRÍTICA! DEBES CAMBIAR ESTA RUTA ***
-    Usa una 'raw string' con 'r' para Windows, y asegúrate que el nombre del 
-    ejecutable (terminal64.exe o terminal.exe) es EXACTO.
+    Args:
+        config_path: Ruta opcional al archivo de configuración YAML.
+                     Si None, usa config/runtime/env/mt5_credentials.yaml
+    
+    Returns:
+        Dict con configuración de ZeroMQ y MT5
     """
-    return {
+    import yaml
+    from pathlib import Path
+    
+    if config_path is None:
+        # Ruta por defecto desde raíz del proyecto
+        project_root = Path(__file__).parent.parent.parent.parent
+        config_path = project_root / "config" / "runtime" / "env" / "mt5_credentials.yaml"
+    else:
+        config_path = Path(config_path)
+    
+    # Valores por defecto en caso de fallo
+    default_config = {
         'zmq_host': '127.0.0.1',
-        # *** RUTA DE EJEMPLO. MODIFICA ESTO ***
-        'mt5_exe_path': r'C:\Program Files\MetaTrader 5\terminal64.exe', 
-        # Corregido según tu prueba de Powershell.
-        'mql5_script': 'JsonAPI.ex5' 
+        'sys_port': 25555,
+        'data_port': 25556,
+        'live_port': 25557,
+        'stream_port': 25558,
+        'mt5_exe_path': r'C:\Program Files\MetaTrader 5\terminal64.exe',
+        'mql5_script': 'JsonAPI.ex5',
+        'debug': False
     }
+    
+    if not config_path.exists():
+        logger.warning(f"Config file not found at {config_path}. Using defaults.")
+        return default_config
+    
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+        
+        # Merge con defaults para claves faltantes
+        merged_config = {**default_config, **(config or {})}
+        logger.info(f"Configuration loaded from {config_path}")
+        return merged_config
+    
+    except Exception as e:
+        logger.error(f"Error loading config from {config_path}: {e}. Using defaults.")
+        return default_config
 
 # Placeholder para el logging
 class SimpleLogger:

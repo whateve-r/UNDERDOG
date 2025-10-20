@@ -1,9 +1,11 @@
 import asyncio
 import time
-import os # <--- CORRECCIÓN: Importar el módulo 'os' para usar os.name
+import os
 from typing import Dict, Any, Awaitable, Callable, Optional, List 
-# Importamos la clase Mt5Connector desde el archivo que has creado
-from mt5_connector import Mt5Connector, logger, AccountInfo, OrderResult, HistoricalData # <--- CORRECCIÓN AQUÍ: Importación directa
+
+# Use absolute imports for package structure
+from underdog.core.connectors.mt5_connector import Mt5Connector, logger, AccountInfo, OrderResult, HistoricalData
+from underdog.core.schemas.zmq_messages import MessageFactory, OrderRequest
 
 # --- 1. Definición de Callbacks (Manejadores de Eventos) ---
 

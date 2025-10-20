@@ -1,1 +1,157 @@
-# docker-compose.yml
+# =============================================================================
+# UNDERDOG Trading System - Docker Compose Configuration
+# Services: underdog, timescaledb, prometheus, grafana
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ===========================================================================
+  # UNDERDOG Trading Application
+  # ===========================================================================
+  underdog:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: underdog-trading
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+      - DB_HOST=timescaledb
+      - DB_PORT=5432
+      - PROMETHEUS_PUSHGATEWAY=http://prometheus:9091
+    ports:
+      - "8000:8000"  # FastAPI monitoring dashboard
+      - "8080:8080"  # MLflow UI (optional)
+    volumes:
+      - ../data:/app/data
+      - ../logs:/app/logs
+      - ../mlruns:/app/mlruns
+      - ../models:/app/models
+      - ../config:/app/config:ro  # Read-only config
+    networks:
+      - underdog-net
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ===========================================================================
+  # TimescaleDB (PostgreSQL with time-series extensions)
+  # ===========================================================================
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: underdog-timescaledb
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USER:-underdog}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
+      - POSTGRES_DB=${DB_NAME:-underdog_trading}
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescaledb-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    networks:
+      - underdog-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-underdog}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ===========================================================================
+  # Prometheus (Metrics Collection)
+  # ===========================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: underdog-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - underdog-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ===========================================================================
+  # Grafana (Visualization Dashboards)
+  # ===========================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: underdog-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:?GRAFANA_PASSWORD is required}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana-dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+    networks:
+      - underdog-net
+    depends_on:
+      - prometheus
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  underdog-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  timescaledb-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local

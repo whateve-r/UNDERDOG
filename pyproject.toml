@@ -8,7 +8,8 @@ readme = "README.md"
 packages = [{include = "underdog"}]
 
 [tool.poetry.dependencies]
-python = "^3.13, <4.0"  # pyhon-version
+python = "^3.13, <4.0"  # python-version
+
 # Conectividad y Asíncrono
 pyzmq = "^27.1.0"        # zeromq-bindings-for-python
 tenacity = "^8.2.3"      # robust-retry-logic
@@ -19,24 +20,71 @@ pandas = "^2.2.2"        # time-series-manager
 numpy = "^1.26.4"        # vector-compute
 
 # Análisis Cuantitativo
-statsmodels = "^0.14.2"  # 
-scikit-learn = "^1.4.2"  # ml
+statsmodels = "^0.14.2"  # statistical-models
+scikit-learn = "^1.4.2"  # machine-learning
+hmmlearn = "^0.3.2"      # hidden-markov-models
 
 # Configuración y Logging
-pyyaml = "^6.0.1"        # .yaml-files
+pyyaml = "^6.0.1"        # yaml-files
 
-# Base de Datos (Opcional)
+# ML & Experiment Tracking
+mlflow = "^2.17.0"       # model-registry-experiment-tracking
+optuna = "^4.0.0"        # hyperparameter-optimization
+
+# Additional ML Libraries
+pykalman = "^0.9.7"      # kalman-filters
+scikit-fuzzy = "^0.5.0"  # fuzzy-logic (alternative to custom implementation)
+
+# JSON Schema Validation
+jsonschema = "^4.23.0"   # message-schema-validation
+
+# Serialization (optional but recommended)
+msgpack = "^1.1.0"       # messagepack-for-zeromq
+
+# Monitoring & Telemetry
+prometheus-client = "^0.21.0"  # prometheus-metrics-collection
+fastapi = "^0.115.0"           # api-server-for-health-checks
+uvicorn = "^0.32.0"            # asgi-server
+requests = "^2.32.3"           # http-requests-for-webhooks
+
+# Database & Time Series (Optional but recommended)
 # influxdb-client = "^2.0.0"
-# psycopg2-binary = "^2.9.9"
+psycopg2-binary = "^2.9.9"     # postgresql-driver-for-timescaledb
+sqlalchemy = "^2.0.32"         # orm-for-database
+alembic = "^1.13.3"            # database-migrations
 tornado = ">=6.1"
 
+# Data Ingestion (100% GRATUITO)
+feedparser = "^6.0.11"         # rss-feed-parsing
+beautifulsoup4 = "^4.12.3"     # html-parsing-web-scraping
+lxml = "^5.3.0"                # xml-parser-for-beautifulsoup
+pyarrow = "^18.0.0"            # parquet-file-format
+httpx = "^0.27.0"              # async-http-client
+
+# News Sentiment Analysis (100% GRATUITO)
+nltk = "^3.9.1"                # vader-sentiment-nltk
+textblob = "^0.18.0"           # simple-sentiment-analysis
+# transformers = "^4.40.0"     # finbert-huggingface (opcional, más pesado)
+# torch = "^2.3.0"             # pytorch-for-transformers (opcional)
+
+# Reddit Scraping (100% GRATUITO)
+# praw = "^7.8.1"              # reddit-api-wrapper (opcional)
+
+# Additional Scientific Computing
+scipy = "^1.14.0"              # scientific-computing-for-statistics
+tqdm = "^4.66.5"               # progress-bars
+
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.2.2"        # unitary-tests
-flake8 = "^7.1.0"        # linting
-mypy = "^1.10.0"         # type-checking
+pytest = "^8.2.2"          # unitary-tests
+pytest-cov = "^6.0.0"      # test-coverage
+flake8 = "^7.1.0"          # linting
+mypy = "^1.10.0"           # type-checking
+black = "^24.0.0"          # code-formatting
+isort = "^5.13.0"          # import-sorting
+
+[tool.poetry.extras]
+ta = ["ta-lib"]
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-ta-lib = { version = "*", optional = true }
