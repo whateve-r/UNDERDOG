@@ -92,6 +92,8 @@ plotly = "^5.24.0"             # plotly-graphing-library-for-charts
 # NOTE: FastAPI/Dash/WebSocket removed (overkill for local use)
 psutil = "^7.1.1"
 urllib3 = "^2.5.0"
+histdata = "^1.1"
+fastparquet = "^2024.11.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.2"          # unitary-tests

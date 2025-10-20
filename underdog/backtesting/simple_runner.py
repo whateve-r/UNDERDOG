@@ -251,21 +251,50 @@ def _ohlcv_to_ticks(ohlcv: pd.DataFrame, symbol: str) -> pd.DataFrame:
     return tick_data
 
 
-def load_historical_data(filepath: str) -> pd.DataFrame:
+def load_historical_data(
+    symbol: str = None,
+    timeframe: str = None,
+    start: str = None,
+    end: str = None,
+    filepath: str = None
+) -> pd.DataFrame:
     """
-    Load historical OHLCV data from CSV.
+    Load historical OHLCV data from TimescaleDB or fallback to Parquet/CSV.
     
     Args:
-        filepath: Path to CSV file
+        symbol: Currency pair (e.g., 'EURUSD') - preferred method
+        timeframe: Timeframe (e.g., '5min', '1h') - preferred method
+        start: Start date (optional, format: 'YYYY-MM-DD')
+        end: End date (optional, format: 'YYYY-MM-DD')
+        filepath: Legacy CSV filepath (deprecated, use symbol+timeframe instead)
     
     Returns:
         DataFrame with parsed timestamps
     """
-    df = pd.read_csv(filepath, parse_dates=['timestamp'])
+    from underdog.database.db_loader import get_loader
     
-    print(f"Loaded {len(df):,} bars from {filepath}")
+    # Legacy CSV support
+    if filepath:
+        print(f"⚠️  Loading from CSV (legacy): {filepath}")
+        df = pd.read_csv(filepath, parse_dates=['timestamp'])
+        print(f"  Loaded {len(df):,} bars")
+        return df
+    
+    # Modern DB/Parquet loading
+    if not symbol or not timeframe:
+        raise ValueError("Must provide symbol and timeframe (or legacy filepath)")
+    
+    loader = get_loader()
+    
+    print(f"Loading {symbol} {timeframe} from database...")
+    df = loader.load_data(symbol, timeframe, start, end)
+    
+    # Reset index to get timestamp as column
+    df = df.reset_index()
+    
+    print(f"  Loaded {len(df):,} bars")
     print(f"  Date range: {df['timestamp'].min()} → {df['timestamp'].max()}")
-    print(f"  Columns: {list(df.columns)}")
+    print(f"  Source: {'TimescaleDB' if loader.db_available else 'Parquet/CSV'}")
     
     return df
 
@@ -293,15 +322,27 @@ if __name__ == "__main__":
     # Check if historical data exists
     data_file = Path("data/historical/EURUSD_M15.csv")
     
-    if not data_file.exists():
-        print(f"❌ Data file not found: {data_file}")
-        print("\nPlease generate data first:")
-        print("  poetry run python scripts/generate_synthetic_data.py")
-        sys.exit(1)
-    
-    # Load data
-    print("Loading historical data...")
-    ohlcv_data = load_historical_data(str(data_file))
+    # Try loading from database first, fallback to CSV
+    try:
+        print("Loading historical data from database...")
+        ohlcv_data = load_historical_data(
+            symbol="EURUSD",
+            timeframe="15min",
+            start="2024-01-01",
+            end="2024-12-31"
+        )
+    except Exception as e:
+        print(f"⚠️  Database load failed: {e}")
+        
+        if not data_file.exists():
+            print(f"❌ CSV fallback file not found: {data_file}")
+            print("\nPlease either:")
+            print("  1. Run backfill: poetry run python scripts/backfill_histdata_parquet.py --symbols EURUSD --year 2024")
+            print("  2. Generate synthetic data: poetry run python scripts/generate_synthetic_data.py")
+            sys.exit(1)
+        
+        print(f"Loading from CSV fallback: {data_file}")
+        ohlcv_data = load_historical_data(filepath=str(data_file))
     
     # Configure EA
     ea_config = SuperTrendRSIConfig(

@@ -217,16 +217,51 @@ st.markdown("---")
 if st.session_state.backtest_running:
     with st.spinner(f"🚀 Running backtest for {ea_clean} on {symbol} {timeframe}..."):
         try:
-            # Load historical data
-            data_file = Path(f"data/historical/{symbol}_{timeframe}.csv")
-            
-            if not data_file.exists():
-                st.error(f"❌ Data file not found: {data_file}")
-                st.info("💡 Generate data first: `poetry run python scripts/generate_synthetic_data.py --multiple`")
-                st.session_state.backtest_running = False
-                st.stop()
-            
-            ohlcv_data = load_historical_data(str(data_file))
+            # Load historical data from DB (preferred) or fallback to files
+            try:
+                from underdog.database.db_loader import get_loader
+                
+                loader = get_loader()
+                
+                # Map timeframe to standard format
+                tf_map = {
+                    "M1": "1min",
+                    "M5": "5min",
+                    "M15": "15min",
+                    "M30": "30min",
+                    "H1": "1h",
+                    "H4": "4h",
+                    "D1": "1d"
+                }
+                tf_standard = tf_map.get(timeframe, "5min")
+                
+                st.info(f"📊 Loading data from database: {symbol} {tf_standard}")
+                ohlcv_data = loader.load_data(
+                    symbol=symbol,
+                    timeframe=tf_standard,
+                    start=start_date.isoformat(),
+                    end=end_date.isoformat()
+                )
+                
+                # Reset index to get timestamp as column
+                ohlcv_data = ohlcv_data.reset_index()
+                
+                st.success(f"✓ Loaded {len(ohlcv_data):,} bars from {'TimescaleDB' if loader.db_available else 'Parquet/CSV'}")
+                
+            except Exception as e:
+                st.warning(f"⚠️  Database load failed: {str(e)}")
+                
+                # Fallback to CSV
+                data_file = Path(f"data/historical/{symbol}_{timeframe}.csv")
+                
+                if not data_file.exists():
+                    st.error(f"❌ Data file not found: {data_file}")
+                    st.info("💡 Run backfill first: `poetry run python scripts/backfill_histdata_parquet.py --symbols EURUSD --year 2024`")
+                    st.session_state.backtest_running = False
+                    st.stop()
+                
+                st.info(f"📁 Loading from CSV fallback: {data_file.name}")
+                ohlcv_data = load_historical_data(filepath=str(data_file))
             
             # Filter by date range
             ohlcv_data = ohlcv_data[
