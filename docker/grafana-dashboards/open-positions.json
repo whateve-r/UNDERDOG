@@ -58,7 +58,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "sum(ea_positions_open)",
+          "expr": "sum(underdog_ea_positions_open)",
           "refId": "A"
         }
       ],
@@ -116,7 +116,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "sum(ea_pnl_unrealized)",
+          "expr": "sum(underdog_ea_pnl_unrealized_usd)",
           "refId": "A"
         }
       ],
@@ -174,7 +174,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "sum(ea_pnl_realized)",
+          "expr": "sum(underdog_ea_pnl_realized_usd)",
           "refId": "A"
         }
       ],
@@ -232,7 +232,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "sum(ea_pnl_daily)",
+          "expr": "sum(underdog_ea_pnl_daily_usd)",
           "refId": "A"
         }
       ],
@@ -387,20 +387,20 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "ea_positions_open",
+          "expr": "underdog_ea_positions_open",
           "format": "table",
           "instant": true,
           "legendFormat": "{{ea_name}}",
           "refId": "A"
         },
         {
-          "expr": "ea_pnl_unrealized",
+          "expr": "underdog_ea_pnl_unrealized_usd",
           "format": "table",
           "instant": true,
           "refId": "B"
         },
         {
-          "expr": "ea_pnl_realized",
+          "expr": "underdog_ea_pnl_realized_usd",
           "format": "table",
           "instant": true,
           "refId": "C"
@@ -505,7 +505,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "ea_pnl_unrealized",
+          "expr": "underdog_ea_pnl_unrealized_usd",
           "legendFormat": "{{ea_name}}",
           "refId": "A"
         }
@@ -553,7 +553,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "ea_positions_open",
+          "expr": "underdog_ea_positions_open",
           "legendFormat": "{{ea_name}}",
           "refId": "A"
         }
@@ -630,7 +630,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "increase(ea_pnl_daily[5m])",
+          "expr": "increase(underdog_ea_pnl_daily_usd[5m])",
           "legendFormat": "{{ea_name}}",
           "refId": "A"
         }

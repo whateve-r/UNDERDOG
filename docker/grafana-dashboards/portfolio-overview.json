@@ -61,7 +61,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "account_balance",
+          "expr": "underdog_account_balance_usd",
           "refId": "A"
         }
       ],
@@ -115,7 +115,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "account_equity",
+          "expr": "underdog_account_equity_usd",
           "refId": "A"
         }
       ],
@@ -175,7 +175,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "drawdown_daily_pct",
+          "expr": "underdog_drawdown_daily_pct",
           "refId": "A"
         }
       ],
@@ -239,7 +239,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "drawdown_total_pct",
+          "expr": "underdog_drawdown_total_pct",
           "refId": "A"
         }
       ],
@@ -346,12 +346,12 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "account_balance",
+          "expr": "underdog_account_balance_usd",
           "legendFormat": "Balance",
           "refId": "A"
         },
         {
-          "expr": "account_equity",
+          "expr": "underdog_account_equity_usd",
           "legendFormat": "Equity",
           "refId": "B"
         }
@@ -438,12 +438,12 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "drawdown_daily_pct",
+          "expr": "underdog_drawdown_daily_pct",
           "legendFormat": "Daily DD %",
           "refId": "A"
         },
         {
-          "expr": "drawdown_total_pct",
+          "expr": "underdog_drawdown_total_pct",
           "legendFormat": "Total DD %",
           "refId": "B"
         }
@@ -491,7 +491,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "sum(ea_signals_total) by (ea_name)",
+          "expr": "sum(underdog_ea_signals_total) by (ea_name)",
           "legendFormat": "{{ea_name}}",
           "refId": "A"
         }
@@ -559,7 +559,7 @@
       "pluginVersion": "9.0.0",
       "targets": [
         {
-          "expr": "ea_status",
+          "expr": "underdog_ea_status",
           "legendFormat": "{{ea_name}}",
           "refId": "A"
         }
