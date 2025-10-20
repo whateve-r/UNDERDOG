@@ -1,47 +1,77 @@
 # =============================================================================
 # Prometheus Configuration for UNDERDOG Trading System
-# Scrapes metrics from FastAPI dashboard
+# Scrapes metrics from 7 Expert Advisors (EAs) + Account monitoring
 # =============================================================================
 
 global:
-  scrape_interval: 15s  # Scrape every 15 seconds
-  evaluation_interval: 15s  # Evaluate rules every 15 seconds
+  scrape_interval: 1s  # Ultra-fast scrape for trading (1 second)
+  evaluation_interval: 5s  # Evaluate rules every 5 seconds
   external_labels:
     monitor: 'underdog-trading'
-    environment: 'production'
+    environment: 'local'  # Changed to 'local' for PC deployment
 
 # Alertmanager configuration (optional)
-# alerting:
-#   alertmanagers:
-#     - static_configs:
-#         - targets:
-#             - alertmanager:9093
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            # - alertmanager:9093  # Uncomment if using Alertmanager
 
-# Rule files (optional)
-# rule_files:
-#   - "alerts.yml"
+# Rule files for alerts (optional)
+rule_files:
+  # - "alerts/drawdown_alerts.yml"
+  # - "alerts/ea_performance_alerts.yml"
 
 # Scrape configurations
 scrape_configs:
-  # UNDERDOG Trading Application
-  - job_name: 'underdog'
+  # =============================================================================
+  # UNDERDOG Trading System (7 EAs + Account Monitoring)
+  # =============================================================================
+  - job_name: 'underdog-trading'
     static_configs:
-      - targets: ['underdog:8000']
+      # Use Windows host IP to access metrics server from Docker container
+      - targets: ['192.168.1.36:8000']
     metrics_path: '/metrics'
-    scrape_interval: 15s
-    scrape_timeout: 10s
-    
-  # Prometheus self-monitoring
+    scrape_interval: 1s  # 1 second for real-time trading
+    scrape_timeout: 500ms  # Timeout after 500ms
+    honor_labels: true
+    # Labels for organization
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'underdog-local'
+  
+  # =============================================================================
+  # Prometheus Self-Monitoring
+  # =============================================================================
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
+    scrape_interval: 10s
 
-  # PostgreSQL/TimescaleDB (requires postgres_exporter - optional)
+  # =============================================================================
+  # Optional: PostgreSQL/TimescaleDB Metrics
+  # =============================================================================
+  # Requires postgres_exporter Docker service
   # - job_name: 'timescaledb'
   #   static_configs:
   #     - targets: ['postgres-exporter:9187']
+  #   scrape_interval: 15s
 
-  # Docker container metrics (requires cAdvisor - optional)
+  # =============================================================================
+  # Optional: Docker Container Metrics
+  # =============================================================================
+  # Requires cAdvisor Docker service
   # - job_name: 'docker'
   #   static_configs:
   #     - targets: ['cadvisor:8080']
+  #   scrape_interval: 10s
+
+  # =============================================================================
+  # Optional: MT5 Terminal Metrics (Future)
+  # =============================================================================
+  # If you want to monitor MT5 terminal health
+  # - job_name: 'mt5-terminal'
+  #   static_configs:
+  #     - targets: ['host.docker.internal:8001']
+  #   scrape_interval: 5s

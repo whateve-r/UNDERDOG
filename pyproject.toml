@@ -81,6 +81,18 @@ tensorflow = "^2.20.0"
 redis = "^6.4.0"
 duckdb = "^1.4.1"
 
+# NEW: Technical Analysis (Industry Standard)
+TA-Lib = "^0.6.7"              # technical-analysis-library (C-based, high performance)
+
+# NEW: UI for Local Monitoring (Simplified for local PC use)
+streamlit = "^1.40.0"          # simple-dashboard-ui-for-backtesting
+plotly = "^5.24.0"             # plotly-graphing-library-for-charts
+
+# NOTE: Grafana + Prometheus already in docker-compose.yml for real-time monitoring
+# NOTE: FastAPI/Dash/WebSocket removed (overkill for local use)
+psutil = "^7.1.1"
+urllib3 = "^2.5.0"
+
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.2"          # unitary-tests
 pytest-cov = "^6.0.0"      # test-coverage

@@ -2,7 +2,7 @@
 apiVersion: 1
 
 datasources:
-  # Prometheus
+  # Prometheus - Primary datasource for real-time metrics
   - name: Prometheus
     type: prometheus
     access: proxy
@@ -10,8 +10,10 @@ datasources:
     isDefault: true
     editable: false
     jsonData:
-      timeInterval: "15s"
+      timeInterval: "1s"  # Changed to 1s for real-time trading
       queryTimeout: "60s"
+      httpMethod: "POST"  # Better for complex queries
+    version: 1
 
   # TimescaleDB (PostgreSQL)
   - name: TimescaleDB
