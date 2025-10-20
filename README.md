@@ -1,4 +1,4 @@
-# UNDERDOG - ALGORITHMIC TRADING SYSTEM FOR UNDERDOGS.
+# UNDERDOG - Algorithmic Trading System for Underdogs
 
 **UNDERDOG** is a sophisticated algorithmic trading system designed for quantitative analysis and automated trading. It leverages high-performance data processing, statistical modeling, and machine learning to create, test, and execute trading strategies efficiently.
 
@@ -15,22 +15,3 @@
 - **Configuration & Logging**: Flexible YAML configuration (`pyyaml`) and detailed logging.
 - **Messaging & Networking**: Cross-platform communication with ZeroMQ (`pyzmq`).
 - **Optional Database Integration**: InfluxDB or PostgreSQL support for storing historical data.
-
----
-
-## 🛠 Requirements
-
-- Python 3.11
-- Poetry (for dependency management)
-- pip (for optional packages like TA-Lib)
-- Windows users: precompiled TA-Lib wheel recommended
-
----
-
-## ⚡ Installation
-
-1. **Clone the repository**
-
-```bash
-git clone <your-repo-url>
-cd UNDERDOG
