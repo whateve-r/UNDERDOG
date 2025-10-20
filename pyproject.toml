@@ -79,6 +79,7 @@ xgboost = "^2.0.0"             # gradient-boosting-trees
 # tensorflow = "^2.15.0"       # deep-learning-framework (opcional, muy pesado)
 tensorflow = "^2.20.0"
 redis = "^6.4.0"
+duckdb = "^1.4.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.2"          # unitary-tests
