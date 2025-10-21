@@ -1,0 +1,22 @@
+BACKTEST SUMMARY - ATRBreakout
+Generated: 2025-10-21 18:06:22.223978
+================================================================================
+
+initial_capital: 100000.0000
+final_capital: 100000.6291
+total_return_pct: 0.0006
+max_drawdown_pct: 0.0002
+sharpe_ratio: 0.0000
+num_trades: 16.0000
+win_rate_pct: 56.2500
+avg_win: 0.0930
+avg_loss: -0.0245
+profit_factor: 4.8847
+avg_pnl: 0.0416
+total_commission: 0.0366
+avg_slippage_pips: 0.0000
+
+Monte Carlo Validation:
+  is_robust: True
+  iterations: 1000
+  num_trades: 16

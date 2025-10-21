@@ -10,18 +10,10 @@ import signal
 from typing import Dict, Any, Optional, Callable, Awaitable, List
 from dataclasses import dataclass 
 
-# === SCHEMAS Y FUNCIONES DUMMY ===
+# Importar schemas correctos desde underdog.core.schemas
+from underdog.core.schemas.account_info import AccountInfo
 
-@dataclass
-class AccountInfo:
-    """Representa la información clave de la cuenta de trading (Placeholder)."""
-    balance: float = 0.0
-    equity: float = 0.0
-    margin: float = 0.0
-    free_margin: float = 0.0
-    leverage: int = 1
-    name: Optional[str] = None
-    server: Optional[str] = None
+# === SCHEMAS DUMMY (solo OrderResult) ===
 
 @dataclass
 class OrderResult:
@@ -124,6 +116,12 @@ class Mt5Connector:
         self.mt5_exe = mt5_exe if mt5_exe is not None else config.get('mt5_exe_path')
         self.mql5_script = mql5_script if mql5_script is not None else config.get('mql5_script')
         
+        # Puertos ZMQ (guardar como atributos para reconexión)
+        self.sys_port = config.get('sys_port', 25555)
+        self.data_port = config.get('data_port', 25556)
+        self.live_port = config.get('live_port', 25557)
+        self.stream_port = config.get('stream_port', 25558)
+        
         if self.mt5_exe is None:
              logger.error("Ruta del ejecutable MT5 (mt5_exe_path) no encontrada.")
         
@@ -146,23 +144,29 @@ class Mt5Connector:
 
         # REQ: Para comandos de sistema síncronos
         self.sys_socket = self.context.socket(zmq.REQ)
-        self.sys_socket.connect(f"tcp://{self.host}:25555")
-        logger.info(f"SYS socket conectado a tcp://{self.host}:25555 (REQ)")
+        self.sys_socket.connect(f"tcp://{self.host}:{self.sys_port}")
+        logger.info(f"SYS socket conectado a tcp://{self.host}:{self.sys_port} (REQ)")
 
         # PULL: Para datos de cuenta en vivo
         self.live_socket = self.context.socket(zmq.PULL)
-        self.live_socket.connect(f"tcp://{self.host}:25557")
-        logger.info(f"LIVE socket conectado a tcp://{self.host}:25557 (PULL)")
+        self.live_socket.connect(f"tcp://{self.host}:{self.live_port}")
+        logger.info(f"LIVE socket conectado a tcp://{self.host}:{self.live_port} (PULL)")
         
         # PULL: Para datos de mercado en tiempo real
         self.stream_socket = self.context.socket(zmq.PULL)
-        self.stream_socket.connect(f"tcp://{self.host}:25558")
-        logger.info(f"STREAM socket conectado a tcp://{self.host}:25558 (PULL)")
+        self.stream_socket.connect(f"tcp://{self.host}:{self.stream_port}")
+        logger.info(f"STREAM socket conectado a tcp://{self.host}:{self.stream_port} (PULL)")
 
         # PULL: Socket DATA original 
         self.data_socket = self.context.socket(zmq.PULL)
-        self.data_socket.connect(f"tcp://{self.host}:25556")
-        logger.info(f"DATA socket conectado a tcp://{self.host}:25556 (PULL)")
+        self.data_socket.connect(f"tcp://{self.host}:{self.data_port}")
+        logger.info(f"DATA socket conectado a tcp://{self.host}:{self.data_port} (PULL)")
+        
+        # CRITICAL: Give sockets time to establish connection (especially PULL sockets)
+        # ZMQ PULL sockets need time to subscribe before messages arrive
+        # Without this, first messages may be lost in round-robin distribution
+        import time as sync_time
+        sync_time.sleep(0.1)  # 100ms should be enough for socket handshake
 
     def _reconnect_socket(self, old_socket: zmq.asyncio.Socket, port_name: str, port: int, socket_type: str = "PULL") -> zmq.asyncio.Socket:
         """Cierra el socket existente y crea y conecta uno nuevo."""
@@ -180,43 +184,72 @@ class Mt5Connector:
     # ------------------------------
     # Conexión y Watchdog
     # ------------------------------
-    async def connect(self) -> bool:
+    async def connect(self, max_retries: int = 3, retry_delay: float = 2.0) -> bool:
         """
-        Lanza MT5 e inicia el bucle de polling para esperar la conexión del EA.
+        Valida la conexión con MT5/EA que ya debe estar corriendo.
+        
+        IMPORTANTE: MT5 Terminal debe estar abierto manualmente con JsonAPI EA activo
+        ANTES de llamar a este método. Este método NO lanza MT5 automáticamente.
+        
+        Args:
+            max_retries: Número máximo de intentos de conexión (default: 3)
+            retry_delay: Segundos entre intentos (default: 2.0)
+        
+        Returns:
+            bool: True si la conexión es exitosa, False en caso contrario
         """
-        if self.mt5_exe and not self._is_mt5_alive():
+        # Solo lanzar MT5 si auto_restart está habilitado Y MT5 no está corriendo
+        if self.auto_restart and self.mt5_exe and not self._is_mt5_alive():
+            logger.warning("auto_restart está habilitado pero MT5 no está corriendo. Lanzando MT5...")
             self._launch_mt5()
+            # Dar tiempo al EA para inicializar
+            await asyncio.sleep(5)
         
-        # Aumentamos el tiempo de espera y el intervalo de reintento para dar más margen al EA
-        max_wait_time = 45 
-        retry_interval = 5
-        start_time = time.time()
+        logger.info(f"Validando conexión con MT5/EA (max {max_retries} intentos)...")
         
-        logger.info(f"Verificando conexión inicial con MT5/EA. Tiempo máximo de espera: {max_wait_time}s.")
-
-        while time.time() - start_time < max_wait_time:
+        for attempt in range(1, max_retries + 1):
             try:
-                # Intentamos obtener la info de cuenta. El sys_request intentará PING/reconexión
+                # Test rápido: enviar request de ACCOUNT
+                logger.info(f"Intento {attempt}/{max_retries}: Solicitando info de cuenta...")
                 info = await self.get_account_info()
                 
-                # Condición de éxito más robusta: Balance > 0 Y que el nombre de cuenta exista
-                if info and info.balance > 0 and info.name: 
-                    logger.success("Conexión inicial con MT5/EA exitosa y datos recibidos.")
+                # Validar que recibimos datos válidos
+                if info and info.balance >= 0:  # Balance puede ser 0 en cuenta nueva
+                    logger.success(f"✅ Conexión exitosa con MT5/EA (Broker: {info.broker}, Balance: ${info.balance:,.2f})")
                     self.is_connected = True
-                    if self.auto_restart:
-                        if self.mt5_process is not None or not self.mt5_exe:
-                             asyncio.create_task(self._watch_mt5())
-                             logger.info("Watchdog MT5 iniciado.")
-                    return True 
-
-            except Exception:
-                pass 
+                    
+                    # Iniciar watchdog solo si auto_restart está habilitado
+                    if self.auto_restart and self.mt5_process is not None:
+                        asyncio.create_task(self._watch_mt5())
+                        logger.info("Watchdog MT5 iniciado.")
+                    
+                    return True
+                else:
+                    logger.warning(f"Respuesta inválida del EA (intento {attempt}/{max_retries})")
+                    
+            except asyncio.TimeoutError:
+                logger.warning(f"Timeout en intento {attempt}/{max_retries}")
+            except Exception as e:
+                logger.warning(f"Error en intento {attempt}/{max_retries}: {e}")
             
-            elapsed = int(time.time() - start_time)
-            logger.info(f"Conexión MT5 fallida (Reintento en {retry_interval}s)... Tiempo transcurrido: {elapsed}s de {max_wait_time}s.")
-            await asyncio.sleep(retry_interval) 
+            # Esperar antes del siguiente intento (excepto en el último)
+            if attempt < max_retries:
+                logger.info(f"Reintentando en {retry_delay}s...")
+                await asyncio.sleep(retry_delay)
         
-        logger.critical(f"Fallo persistente al conectar con MT5/EA después de {max_wait_time} segundos. Saliendo.")
+        # Todos los intentos fallaron
+        logger.error(
+            "❌ No se pudo establecer conexión con MT5/EA.\n"
+            "   CHECKLIST:\n"
+            "   1. ¿MT5 está abierto?\n"
+            "   2. ¿JsonAPI EA está cargado en un gráfico?\n"
+            "   3. ¿El EA muestra cara feliz 😊 (no 😞)?\n"
+            "   4. ¿AutoTrading está habilitado (botón verde)?\n"
+            "   5. ¿'Allow DLL imports' está habilitado en EA settings?\n"
+            "   6. ¿Los logs de MT5 muestran 'Binding socket on port 25555...'?\n"
+            "\n"
+            "   Ver guía completa: docs/MT5_JSONAPI_SETUP.md"
+        )
         return False
         
     async def disconnect(self):
@@ -229,58 +262,135 @@ class Mt5Connector:
     # ------------------------------
     # SYS request con manejo de backoff y reconexión
     # ------------------------------
-    async def sys_request(self, message: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def sys_request(self, message: Dict[str, Any], max_retries: int = 5) -> Optional[Dict[str, Any]]:
         """
         Envía un comando al socket REQ y espera la respuesta con reintento y backoff.
+        
+        IMPORTANTE: Patrón REQ/REP es frágil. Si no se recibe respuesta, el socket
+        queda desincronizado y debe ser reconectado ANTES del siguiente intento.
+        
+        Args:
+            message: Diccionario con el comando (e.g., {"action": "ACCOUNT"})
+            max_retries: Número máximo de intentos (default: 5)
+        
+        Returns:
+            Diccionario con la respuesta JSON o None si es "OK" o falla
         """
         attempt = 0
-        while attempt < 5: 
+        
+        while attempt < max_retries:
             try:
+                # Enviar request
                 await self.sys_socket.send_string(json.dumps(message))
                 
+                # Configurar poller para timeout
                 poller = zmq.asyncio.Poller()
                 poller.register(self.sys_socket, zmq.POLLIN)
                 
-                # Aumentamos el timeout para la primera solicitud
-                current_timeout = self.sys_timeout * 1000 if attempt == 0 else self.sys_timeout * 1000
+                # Timeout en milisegundos
+                timeout_ms = int(self.sys_timeout * 1000)
                 
-                socks = dict(await asyncio.wait_for(poller.poll(current_timeout), timeout=self.sys_timeout + 1)) 
-
+                # CORRECCIÓN CRÍTICA: Usar solo poller.poll(), sin asyncio.wait_for() anidado
+                # poller.poll() ya maneja el timeout correctamente
+                socks = dict(await poller.poll(timeout_ms))
+                
+                # Verificar si hay respuesta disponible
                 if self.sys_socket in socks:
                     resp = await self.sys_socket.recv_string()
                     resp_strip = resp.strip()
                     
+                    # Respuesta vacía
                     if not resp_strip:
-                        logger.warning(f"[SYS REQ] Respuesta vacía (Retry {attempt+1}).")
-                        # No lanzar excepción, dejar que el flujo continúe al backoff
+                        logger.warning(f"[SYS REQ] Respuesta vacía (intento {attempt+1}/{max_retries})")
+                        # REQ/REP desincronizado → reconectar
+                        self.sys_socket = self._reconnect_socket(self.sys_socket, "SYS", self.sys_port, "REQ")
+                        attempt += 1
+                        await asyncio.sleep(min(0.5 * (2**attempt), 5))
+                        continue
                     
+                    # Respuesta "OK" (acknowledge - datos vendrán por DATA socket)
                     if resp_strip == "OK":
-                        return None 
+                        # El EA JsonAPI envía "OK" por SYS y los datos reales por DATA socket
+                        logger.info("[SYS REQ] Recibido 'OK', esperando datos por DATA socket...")
                         
+                        try:
+                            # Esperar datos por DATA socket con timeout
+                            data_poller = zmq.asyncio.Poller()
+                            data_poller.register(self.data_socket, zmq.POLLIN)
+                            
+                            # Timeout más largo para operaciones pesadas (e.g., HISTORY puede ser muy lento)
+                            # HISTORY con muchos datos puede tardar 30+ segundos
+                            data_timeout_ms = 60000  # 60 segundos (era 10s)
+                            logger.info(f"[SYS REQ] Polling DATA socket con timeout de {data_timeout_ms/1000}s...")
+                            data_socks = dict(await data_poller.poll(data_timeout_ms))
+                            
+                            if self.data_socket in data_socks:
+                                logger.info("[SYS REQ] Datos disponibles en DATA socket, recibiendo...")
+                                data_resp = await self.data_socket.recv_string()
+                                logger.info(f"[SYS REQ] Recibidos {len(data_resp)} caracteres del DATA socket")
+                                data_json = json.loads(data_resp)
+                                
+                                # Verificar si hay error en la respuesta
+                                if data_json.get('error'):
+                                    logger.error(f"[SYS REQ] EA retornó error: {data_json}")
+                                
+                                # Actualizar timestamp de última comunicación
+                                self.last_data = time.time()
+                                return data_json
+                            else:
+                                logger.error(f"[SYS REQ] Timeout de {data_timeout_ms/1000}s esperando datos por DATA socket")
+                                logger.error(f"[SYS REQ] Comando enviado: {json.dumps(message)}")
+                                return None
+                                
+                        except json.JSONDecodeError as e:
+                            logger.error(f"[SYS REQ] Respuesta de DATA socket no es JSON: {e}")
+                            logger.error(f"[SYS REQ] Data recibida: {data_resp[:500]}...")
+                            return None
+                        except Exception as e:
+                            logger.error(f"[SYS REQ] Error leyendo DATA socket: {e}")
+                            import traceback
+                            logger.error(traceback.format_exc())
+                            return None
+                    
+                    # Parse JSON
                     try:
-                        return json.loads(resp_strip)
-                    except json.JSONDecodeError:
-                        logger.error(f"[SYS REQ] Respuesta no JSON recibida: {resp_strip}. Reconectando SYS socket.")
-                        self.sys_socket = self._reconnect_socket(self.sys_socket, "SYS", 25555, "REQ")
-                        raise 
+                        data = json.loads(resp_strip)
+                        # Success - actualizar timestamp de última comunicación
+                        self.last_data = time.time()
+                        return data
+                    except json.JSONDecodeError as e:
+                        logger.error(f"[SYS REQ] Respuesta no es JSON válido: {resp_strip[:100]}...")
+                        logger.error(f"[SYS REQ] JSONDecodeError: {e}")
+                        # REQ/REP desincronizado → reconectar
+                        self.sys_socket = self._reconnect_socket(self.sys_socket, "SYS", self.sys_port, "REQ")
+                        attempt += 1
+                        await asyncio.sleep(min(0.5 * (2**attempt), 5))
+                        continue
+                        
                 else:
-                    logger.warning(f"[SYS REQ] Timeout de {self.sys_timeout}s. Reconectando SYS socket (Retry {attempt+1}).")
-                    self.sys_socket = self._reconnect_socket(self.sys_socket, "SYS", 25555, "REQ")
-            
-            except asyncio.TimeoutError:
-                logger.warning(f"[SYS REQ] Timeout de {self.sys_timeout}s. Reconectando SYS socket (Retry {attempt+1}).")
-                self.sys_socket = self._reconnect_socket(self.sys_socket, "SYS", 25555, "REQ")
+                    # Timeout - no hay respuesta
+                    logger.warning(f"[SYS REQ] Timeout de {self.sys_timeout}s (intento {attempt+1}/{max_retries})")
+                    # REQ/REP desincronizado → DEBE reconectar socket
+                    self.sys_socket = self._reconnect_socket(self.sys_socket, "SYS", self.sys_port, "REQ")
+                    
             except asyncio.CancelledError:
+                # Permitir cancelación limpia del task
+                logger.info("[SYS REQ] Request cancelado por el usuario")
                 raise
+                
             except Exception as e:
-                if not isinstance(e, asyncio.CancelledError):
-                    logger.error(f"[SYS REQ] Excepción en la solicitud (Retry {attempt+1}): {e}. Reconectando SYS socket.")
-                self.sys_socket = self._reconnect_socket(self.sys_socket, "SYS", 25555, "REQ")
+                logger.error(f"[SYS REQ] Error inesperado (intento {attempt+1}/{max_retries}): {e}")
+                # REQ/REP potencialmente dañado → reconectar
+                self.sys_socket = self._reconnect_socket(self.sys_socket, "SYS", self.sys_port, "REQ")
             
+            # Backoff exponencial antes del siguiente intento
             attempt += 1
-            await asyncio.sleep(min(0.5 * (2**attempt), 5)) 
-
-        logger.critical(f"[SYS REQ] Solicitud fallida después de {attempt} reintentos.")
+            if attempt < max_retries:
+                backoff = min(0.5 * (2**attempt), 5)  # Max 5 segundos
+                await asyncio.sleep(backoff)
+        
+        # Todos los intentos fallaron
+        logger.critical(f"[SYS REQ] Falló después de {max_retries} intentos. Comando: {message.get('action', 'UNKNOWN')}")
         return None
 
     # ------------------------------
@@ -344,24 +454,36 @@ class Mt5Connector:
     async def get_account_info(self) -> Optional[AccountInfo]:
         """Obtiene la información de la cuenta y la mapea al Schema AccountInfo."""
         
-        # Eliminamos la llamada redundante a PING. El sys_request maneja la lógica de reconexión.
         response = await self.sys_request({"action": "ACCOUNT"})
         
-        if response and response.get('Account'):
-            info_dict = response['Account']
+        # JsonAPI EA devuelve las claves en minúsculas directamente (no anidadas en 'Account')
+        if response and isinstance(response, dict):
             try:
+                # Verificar que error = false
+                if response.get('error', False):
+                    logger.error(f"EA devolvió error: {response}")
+                    return None
+                
                 return AccountInfo(
-                    balance=info_dict.get('Balance', 0.0),
-                    equity=info_dict.get('Equity', 0.0),
-                    margin=info_dict.get('Margin', 0.0),
-                    free_margin=info_dict.get('FreeMargin', 0.0),
-                    leverage=info_dict.get('Leverage', 1),
-                    name=info_dict.get('Name'),
-                    server=info_dict.get('Server')
+                    balance=float(response.get('balance', 0.0)),
+                    equity=float(response.get('equity', 0.0)),
+                    margin=float(response.get('margin', 0.0)),
+                    margin_free=float(response.get('margin_free', 0.0)),
+                    margin_level=float(response.get('margin_level', 0.0)),
+                    leverage=1,  # JsonAPI no devuelve leverage en ACCOUNT
+                    name='',  # JsonAPI no devuelve name en ACCOUNT
+                    server=str(response.get('server', '')),
+                    broker=str(response.get('broker', '')),
+                    currency=str(response.get('currency', 'USD')),
+                    trading_allowed=bool(response.get('trading_allowed', 0)),  # Convert 1/0 to bool
+                    bot_trading=bool(response.get('bot_trading', 0))  # Convert 1/0 to bool
                 )
             except Exception as e:
                 logger.error(f"Error al mapear datos de cuenta a Schema AccountInfo: {e}")
+                logger.error(f"Response recibida: {response}")
                 return None
+        
+        logger.warning("No se recibió respuesta válida del EA para ACCOUNT")
         return None
 
     # ------------------------------
@@ -387,34 +509,62 @@ class Mt5Connector:
                     await self.sys_request({"action": "PING"})
                     
     def _is_mt5_alive(self) -> bool:
-        """Verifica si el proceso MT5 está en ejecución."""
-        if self.mt5_process is None:
+        """
+        Verifica si el proceso MT5 está en ejecución.
+        
+        CORRECCIÓN CRÍTICA: No depender de self.mt5_process (solo válido si Python lanzó MT5).
+        Usa psutil para buscar 'terminal64.exe' en procesos del sistema.
+        """
+        try:
+            import psutil
+            
+            # Buscar proceso terminal64.exe
+            for proc in psutil.process_iter(['name']):
+                try:
+                    if proc.info['name'].lower() == 'terminal64.exe':
+                        return True
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    continue
+            
             return False
-        return self.mt5_process.poll() is None
+            
+        except ImportError:
+            # Fallback: si psutil no está instalado, usar método antiguo
+            logger.warning("psutil no está instalado. Usando fallback (menos robusto).")
+            if self.mt5_process is None:
+                return False
+            return self.mt5_process.poll() is None
 
     def _launch_mt5(self):
         """
-        Lanza el ejecutable MT5 con la configuración por defecto 
-        y /script para iniciar el EA.
+        Lanza el ejecutable MT5.
+        
+        ⚠️ ADVERTENCIA: Este método NO es recomendado para producción.
+        - El argumento /script:JsonAPI.ex5 NO carga el EA de forma persistente
+        - Solo ejecuta un script una vez y termina
+        - El EA debe ser cargado manualmente y guardado en perfil/template
+        
+        Este método solo debe usarse para testing automatizado con auto_restart=true.
+        En VPS de producción, MT5 debe estar abierto manualmente con EA activo.
         """
         if self.mt5_exe is None:
-            logger.error("[WATCHDOG] Ruta del ejecutable MT5 (mt5_exe) no proporcionada. No se puede lanzar.")
+            logger.error("[LAUNCH] Ruta del ejecutable MT5 (mt5_exe) no proporcionada.")
             return
 
-        # 1. Comprobación de existencia (soluciona WinError 2)
         if not os.path.exists(self.mt5_exe):
-            logger.critical(f"[WATCHDOG] ERROR FATAL: El archivo MT5 NO EXISTE en la ruta: '{self.mt5_exe}'. ¡Verifica la ruta ABSOLUTA!")
+            logger.critical(f"[LAUNCH] MT5 NO EXISTE en: {self.mt5_exe}")
             self.mt5_process = None
             return
 
+        # Si MT5 ya está corriendo, no hacer nada (evitar duplicados)
         if self._is_mt5_alive():
-            self._terminate_mt5()
+            logger.warning("[LAUNCH] MT5 ya está corriendo. No se lanzará otra instancia.")
+            return
             
         cmd = [self.mt5_exe]
         
-        # 2. Se mantiene sin /portable
-        
-        # 3. CRUCIAL: Carga el EA automáticamente en el gráfico que haya sido guardado.
+        # NOTA: /script no carga EAs de forma persistente
+        # Solo útil para scripts que se ejecutan una vez
         if self.mql5_script:
             cmd.append(f"/script:{self.mql5_script}")
         

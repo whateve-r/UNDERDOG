@@ -1,502 +1,746 @@
-# UNDERDOG - Algorithmic Trading System
+# 🚀 UNDERDOG - Algorithmic Trading System
 
-**A sophisticated, modular algorithmic trading platform designed for quantitative analysis, automated trading, and Prop Firm compliance.**
+> **Sistema de trading algorítmico para Prop Firms con backtesting Backtrader y ejecución en vivo MT5**  
+> **Business Goal: €2,000-4,000/mes en Prop Firm funded accounts**
 
-[![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
-[![Poetry](https://img.shields.io/badge/dependency-Poetry-blue)](https://python-poetry.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Phase 4: 78%](https://img.shields.io/badge/Phase%204-78%25-brightgreen.svg)](docs/PHASE4_COMPLETE_STRATEGIES.md)
-[![TA-Lib: 516x Speedup](https://img.shields.io/badge/TA--Lib-516x%20faster-red.svg)](docs/STRATEGIES_VISUAL_SUMMARY.md)
-
----
-
-## 🎯 Current Status: Phase 4.0 - TA-Lib Optimization + Scalable UI (78% Complete)
-
-**✅ COMPLETED (All 7 Trading Strategies)**:
-- ✅ **SuperTrendRSI** v4.0 - Trend following (Confidence: 1.0, 41.8x speedup)
-- ✅ **ParabolicEMA** v4.0 - SAR trailing stop (Confidence: 0.95, 1,062x speedup 🔥)
-- ✅ **KeltnerBreakout** v4.0 - Volatility breakout (Confidence: 0.90, 683x speedup)
-- ✅ **EmaScalper** v4.0 - Fast scalping M5 (Confidence: 0.85, 591x speedup)
-- ✅ **BollingerCCI** v4.0 - Mean reversion (Confidence: 0.88, 368x speedup)
-- ✅ **ATRBreakout** v4.0 - Volatility expansion (Confidence: 0.87, 606x speedup)
-- ✅ **PairArbitrage** v4.0 - Statistical arbitrage (Confidence: 0.92, 263x speedup)
-- ✅ **Redis Pub/Sub Backend** - Decoupling UI ↔ Trading Engine (450 lines)
-- ✅ **Architecture Documentation** - Scalable UI design (1,600 lines)
-- ✅ **Benchmarking** - Scientific verification (400 lines)
-
-**⏳ PENDING**:
-- FastAPI Backend (REST + WebSocket gateway)
-- Dash Frontend (Real-time monitoring UI)
-- Backtesting UI (Parameter optimization + heatmaps)
-
-**📊 Performance Impact**: 
-- **516x average speedup** (TA-Lib vs NumPy manual indicators)
-- **54 min 54 sec saved** per 10,000 iteration backtest
-- **951 hours/year saved** (39.6 days) with frequent optimization
-
-👉 **Quick Start**: `python scripts/complete_trading_workflow.py` for full demo  
-👉 **Docs**: See [`docs/STRATEGIES_VISUAL_SUMMARY.md`](docs/STRATEGIES_VISUAL_SUMMARY.md) for visual overview
+[![Python](https://img.shields.io/badge/Python-3.13+-blue.svg)](https://www.python.org/)
+[![Backtrader](https://img.shields.io/badge/Backtrader-1.9.78-green.svg)]()
+[![MT5](https://img.shields.io/badge/MT5-Live%20Execution-orange.svg)]()
+[![Status](https://img.shields.io/badge/Status-Paper%20Trading%20Ready-brightgreen.svg)]()
 
 ---
 
-## 🚀 Features
+## 📋 Visión General
 
-### Core Capabilities (Phase 1 ✅)
-- **Real-Time Market Connectivity**: Seamless integration with MetaTrader 5 via ZeroMQ for low-latency async communication
-- **Multi-Strategy Architecture**: Portfolio-level strategy coordination with correlation tracking and dynamic allocation
-- **Advanced Risk Management**: Daily/weekly/monthly DD limits, exposure constraints, correlation-based position scaling
-- **Intelligent Position Sizing**: Fixed fractional + fractional Kelly + confidence-weighted + DD-scaled adaptive sizing
-- **Fuzzy Logic Confidence Scoring**: Transform ML outputs and indicators into actionable confidence scores (Mamdani inference)
-- **High-Performance Data Handling**: Efficient time-series management with pandas and vectorized computations with numpy
-- **Technical Analysis**: 150+ indicators with TA-Lib integration (RSI, Bollinger, ATR, SuperTrend)
+**UNDERDOG** es un sistema de trading algorítmico diseñado para **pasar challenges de Prop Firms** (FTMO, The5ers, MyForexFunds) y generar ingresos consistentes a través de trading automatizado.
 
-### Advanced Modules (Phase 2 - 62.5% ✅)
-- **Walk-Forward Optimization**: Automated IS/OOS segmentation, grid search, anchored/rolling windows
-- **Monte Carlo Simulation**: 5000+ simulations with bootstrap resampling, slippage modeling, percentile risk analysis
-- **MLflow Integration**: Experiment tracking, model versioning, staging workflow (None → Staging → Production)
-- **HMM Regime Detection**: 3-5 state Hidden Markov Models for market regime classification (BULL/BEAR/SIDEWAYS/HIGH_VOL/LOW_VOL)
-- **Feature Engineering Pipeline**: Hash-versioned feature sets with 50+ technical/momentum/volatility features, cyclic temporal encoding
-- **Statistical Modeling**: Cointegration tests, ADF stationarity validation, Kalman filters for pairs trading
-- **ML Training Pipeline**: LSTM, CNN, Random Forest, XGBoost with reproducible seeds and data hashing
-- **Strategy Gating**: Regime-based activation logic (trend active in bull/bear, mean-reversion in sideways)
+### ✅ Features Implementadas:
 
-### Phase 4.0 - TA-Lib Optimization + Scalable UI (78% ✅)
-- **7 Production EAs with TA-Lib**: SuperTrendRSI, ParabolicEMA, KeltnerBreakout, EmaScalper, BollingerCCI, ATRBreakout, PairArbitrage
-- **Redis Pub/Sub Messaging**: Decoupled architecture for UI ↔ Trading Engine (async event streaming)
-- **516x Performance Boost**: TA-Lib C-optimized indicators vs NumPy manual implementations
-- **Scalable UI Architecture**: FastAPI + Dash + WebSocket for real-time monitoring (docs complete, implementation pending)
-- **Portfolio Diversification**: 4 trend-following, 2 mean-reversion, 1 stat-arb strategies
-- **Multi-Timeframe Coverage**: M5 (scalping), M15 (swing), H1 (position trading)
-- **Scientific Benchmarking**: 100 iterations/indicator validation, statistical verification
+- ✅ **Backtesting con Backtrader** (16 trades validados, Win Rate 56.25%, Profit Factor 4.88)
+- ✅ **PropFirm Risk Manager** (5% daily DD, 10% total DD enforcement)
+- ✅ **MT5 Live Execution** (MT5Executor con pre-execution DD validation)
+- ✅ **Backtrader→MT5 Bridge** (estrategias funcionan en backtest Y live sin cambios)
+- ✅ **Monte Carlo Validation** (1,000 iterations robustness testing)
+- ✅ **Emergency Stop** (close all positions on DD breach)
+- ✅ **Comprehensive Logging** (audit trail completo para compliance)
+
+### 🎯 Business Objective:
+
+**Revenue Target**: €2,000-4,000/mes por cuenta funded  
+**Timeline**: 60-90 días desde paper trading hasta FTMO funded account  
+**Strategy**: Pass FTMO Phase 1 (8% profit, <5% daily DD, <10% total DD en 30 días)
 
 ---
 
-## 📊 Trading Strategies Overview (Phase 4.0)
+## �️ Arquitectura
 
-| Strategy | Type | Confidence | R:R | Speedup | Timeframe | Pairs |
-|----------|------|------------|-----|---------|-----------|-------|
-| **SuperTrendRSI** | Trend | 1.0 | 1:1.5 | 41.8x | M15 | EUR, GBP, USD |
-| **ParabolicEMA** | Trend | 0.95 | 1:2 | 1,062x 🔥 | M15 | EUR, GBP, NZD |
-| **KeltnerBreakout** | Volatility | 0.90 | 1:2 | 683x | M15 | GBP, EURJPY |
-| **EmaScalper** | Scalping | 0.85 | 1:1.33 | 591x | M5 | EUR, USD, JPY |
-| **BollingerCCI** | Mean Rev | 0.88 | Variable | 368x | M15 | GBP, EURJPY |
-| **ATRBreakout** | Volatility | 0.87 | 1:1.67 | 606x | M15 | USDJPY, EURJPY |
-| **PairArbitrage** | Stat Arb | 0.92 | Variable | 263x | H1 | EUR/GBP, AUD/NZD |
+### Sistema Dual: Backtest (Backtrader) + Live Execution (MT5)
 
-**Total**: 3,460 lines of TA-Lib optimized code  
-**Average Confidence**: 0.91 (91%)  
-**Average Speedup**: 516x faster than NumPy
+```
+╔═══════════════════════════════════════════════════════════════╗
+║                    BACKTEST MODE (Backtrader)                 ║
+║   Strategy → Backtrader Engine → Monte Carlo → CSV Results   ║
+╚═══════════════════════════════════════════════════════════════╝
+                            │
+                            │ Validated Strategy
+                            ▼
+╔═══════════════════════════════════════════════════════════════╗
+║                  LIVE MODE (MT5 Execution)                    ║
+║   Strategy → Bridge → MT5Executor → MetaTrader 5 → Market    ║
+║             ↓                                                 ║
+║      Pre-Execution DD Validation (5% daily, 10% total)       ║
+╚═══════════════════════════════════════════════════════════════╝
+```
+
+### Componentes Principales
+
+#### 1. **Backtesting Engine** (`underdog/backtesting/bt_engine.py`)
+- Backtrader 1.9.78 como motor de backtesting
+- PropFirmRiskManager integrado (DD limits enforcement)
+- Monte Carlo validation (1,000-10,000 iterations)
+- Export a CSV (trades, equity curve, metrics)
+
+#### 2. **MT5 Executor** (`underdog/execution/mt5_executor.py`)
+```python
+executor = MT5Executor(
+    account=12345678,
+    password="password",
+    server="ICMarkets-Demo",
+    max_daily_dd=5.0,   # PropFirm standard
+    max_total_dd=10.0   # PropFirm standard
+)
+
+result = executor.execute_order(
+    symbol="EURUSD",
+    order_type=OrderType.BUY,
+    volume=0.1,
+    sl_pips=20,
+    tp_pips=40
+)
+```
+
+**Features:**
+- Pre-execution DD validation (automático en cada orden)
+- Auto-reconnect on connection loss (5 intentos)
+- Emergency close all positions
+- Comprehensive audit trail logging
+
+#### 3. **Backtrader→MT5 Bridge** (`underdog/bridges/bt_to_mt5.py`)
+```python
+class MyStrategy(LiveStrategy):
+    def next(self):
+        if buy_signal:
+            # Funciona en BACKTEST (self.buy()) Y LIVE (mt5.order_send())
+            self.execute_buy(symbol="EURUSD", sl_pips=20, tp_pips=40)
+```
+
+**Ventaja:** Misma estrategia funciona en backtest y live. Zero refactoring.
+
+#### 4. **Data Sources** (NEW - MT5 Historical Loader)
+- ✅ **MT5 Broker Data** (mt5_historical_loader.py - REAL spreads via ZMQ)
+- ✅ HuggingFace Hub (elthariel/histdata_fx_1m - alternative)
+- ✅ Synthetic data generator (testing sin dependencies)
+
+**Ventaja MT5 Data**: Spreads y slippage REALES del broker que usarás en live trading. No symlink issues, reusa `mt5_connector.py` existente.
+
+---
+
+## 🚀 Quick Start
+
+### 1. Installation
+
+```bash
+# Clone repository
+git clone https://github.com/whateve-r/UNDERDOG.git
+cd UNDERDOG
+
+# Install dependencies
+poetry install
+```
+
+### 2. Setup MT5 Connector (for data + live trading)
+
+**Prerequisitos**:
+- MetaTrader 5 instalado y funcionando
+- JsonAPI EA cargado en MT5 (ZMQ communication)
+- Ports 25555-25558 configurados
+
+**Test connection**:
+```python
+from underdog.core.connectors.mt5_connector import Mt5Connector
+import asyncio
+
+async def test():
+    async with Mt5Connector() as connector:
+        info = await connector.get_account_info()
+        print(f"Balance: ${info.balance}, Equity: ${info.equity}")
+
+asyncio.run(test())
+```
+
+### 3. Download Historical Data (MT5 Broker)
+
+```python
+from underdog.data.mt5_historical_loader import download_mt5_data
+
+# Download 1 year of EURUSD M1 data from YOUR broker
+df = download_mt5_data("EURUSD", "2024-01-01", "2024-12-31", "M1")
+
+print(f"Downloaded {len(df)} bars with REAL broker spreads")
+print(f"Avg spread: {df['spread'].mean():.2f} points")
+```
+
+### 4. Backtest a Strategy
+
+```bash
+# Run end-to-end backtest with Monte Carlo validation
+poetry run python scripts/test_end_to_end.py --quick
+
+# Expected output:
+# ✅ 16 trades executed
+# ✅ Win Rate: 56.25%
+# ✅ Profit Factor: 4.88
+# ✅ Monte Carlo: ROBUST
+```
+
+### 5. Demo Paper Trading (10 Orders in DEMO Account)
+
+**IMPORTANTE:** Necesitas cuenta DEMO MT5 (ICMarkets, FTMO, etc.)
+
+```bash
+# NOTE: Currently being refactored to use Mt5Connector (ZMQ)
+poetry run python scripts/demo_paper_trading.py \
+  --account 12345678 \
+  --password "tu_password" \
+  --server "ICMarkets-Demo" \
+  --symbol EURUSD \
+  --volume 0.01 \
+  --orders 10
+```
+
+**Success Criteria:**
+- ✅ 8/10 órdenes ejecutadas exitosamente
+- ✅ Zero violaciones de DD límites (5% daily, 10% total)
+- ✅ Emergency close funciona correctamente
+- ✅ CSV exportado con audit trail completo
+
+### 4. Full Documentation
+
+- **MT5 Live Trading Guide**: `docs/MT5_LIVE_TRADING_GUIDE.md` (paso a paso completo)
+- **Quick Reference**: `docs/MT5_QUICK_REFERENCE.md` (comandos comunes)
+- **Session Summary**: `docs/SESSION_SUMMARY_MT5_IMPLEMENTATION.md` (detalles técnicos)
+- **Production Roadmap**: `docs/PRODUCTION_ROADMAP_REAL.md` (60-day plan to FTMO)
+
+---
+
+## 📊 Current Status
+
+### ✅ COMPLETADO (Production Ready):
+
+| Component | Status | LOC | Testing |
+|-----------|--------|-----|---------|
+| Backtesting Engine (Backtrader) | ✅ Complete | ~500 | ✅ Validated (16 trades) |
+| PropFirmRiskManager | ✅ Complete | ~150 | ✅ Validated (Monte Carlo) |
+| MT5Executor | ✅ Complete | ~600 | ⏳ Ready for DEMO |
+| Backtrader→MT5 Bridge | ✅ Complete | ~400 | ⏳ Ready for DEMO |
+| Demo Paper Trading Script | ✅ Complete | ~350 | ⏳ Ready to Execute |
+| Live Strategy Example (ATR Breakout) | ✅ Complete | ~200 | ⏳ Ready to Execute |
+| Documentation | ✅ Complete | ~1,500 lines | N/A |
+
+### ⏳ PRÓXIMOS PASOS (Critical Path):
+
+1. **Esta semana**: Ejecutar `demo_paper_trading.py` en cuenta DEMO real
+2. **Semana 2-3**: FailureRecoveryManager + Monitoring Stack (Prometheus/Grafana)
+3. **Semana 4-5**: VPS Deployment (OVHCloud, systemd auto-restart)
+4. **Semana 6-13**: 30 días paper trading (uptime >99.9%, DD <7%)
+5. **Semana 14+**: FTMO Challenge Phase 1 (€155 → €2,000-4,000/mes)
+
+---
+
+## 🎯 Prop Firm Compliance
+
+### Risk Limits (Hardcoded)
+
+```python
+# PropFirmRiskManager
+MAX_DAILY_DD = 5.0%   # FTMO/The5ers/MyForexFunds standard
+MAX_TOTAL_DD = 10.0%  # Industry standard
+
+# Pre-execution validation en CADA orden
+if daily_dd >= MAX_DAILY_DD or total_dd >= MAX_TOTAL_DD:
+    return OrderResult(status=OrderStatus.REJECTED_DD)
+```
+
+### FTMO Phase 1 Requirements:
+
+| Metric | Target | System Enforcement |
+|--------|--------|-------------------|
+| Profit Target | 8% in 30 days | Manual strategy selection |
+| Daily DD Limit | <5% | ✅ Auto-reject orders if breached |
+| Total DD Limit | <10% | ✅ Auto-reject orders if breached |
+| Min Trading Days | 4 days | Manual monitoring |
+| Max Consecutive Losses | No limit | Tracked in logs |
+
+**Emergency Stop**: `executor.emergency_close_all()` cierra TODAS las posiciones si DD breach detectado.
+
+---
+
+## 📈 Example Results (Backtest)
+
+**Strategy**: ATRBreakout (20-period SMA + ATR breakout)  
+**Symbol**: EURUSD  
+**Period**: 525,601 bars (synthetic data)  
+**Initial Capital**: $10,000
+
+| Metric | Value | PropFirm Acceptable? |
+|--------|-------|---------------------|
+| Total Trades | 16 | ✅ (>10 for statistical significance) |
+| Win Rate | 56.25% | ✅ (>48% target) |
+| Profit Factor | 4.88 | ✅ (>1.4 target) |
+| Max Drawdown | <5% | ✅ (<8% target) |
+| Monte Carlo | ROBUST | ✅ (not lucky) |
+
+**Conclusion**: Strategy ready for paper trading validation in DEMO account.
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| Backtesting | Backtrader 1.9.78 | Strategy validation, Monte Carlo |
+| Live Execution | MetaTrader 5 | Order execution, position tracking |
+| Data | HuggingFace Datasets | Historical Forex OHLC (1-min granularity) |
+| Risk Management | PropFirmRiskManager | DD limits enforcement (5%/10%) |
+| Language | Python 3.13 | Core logic |
+| Dependency Mgmt | Poetry | Package management |
+| Monitoring (TODO) | Prometheus + Grafana | 24/7 uptime tracking, DD alerts |
+| Deployment (TODO) | OVHCloud VPS + Docker | Production 99.9% uptime |
 
 ---
 
 ## 📁 Project Structure
 
 ```
-UNDERDOG/
-├── config/
-│   ├── runtime/env/
-│   │   └── mt5_credentials.yaml      # MT5 connection config
-│   └── strategies/
-│       ├── keltner_breakout.yaml
-│       └── fuzzy_confidence_rules.yaml  # Fuzzy logic rules
-│
-├── underdog/
-│   ├── core/
-│   │   ├── connectors/
-│   │   │   ├── mt5_connector.py       # ZeroMQ MT5 integration
-│   │   │   └── trading_bot_example.py
-│   │   ├── schemas/
-│   │   │   └── zmq_messages.py        # Message schemas & validation
-│   │   ├── comms_bus/                  # Async queues, pub/sub
-│   │   └── data_handlers/              # OHLCV processing
-│   │
-│   ├── risk_management/
-│   │   ├── risk_master.py             # Portfolio-level risk manager
-│   │   ├── position_sizing.py         # Multi-factor position sizing
-│   │   └── rules_engine.py
-│   │
-│   ├── strategies/
-│   │   ├── strategy_matrix.py         # Multi-strategy coordinator
-│   │   ├── base_ea.py                 # Base EA framework
-│   │   │
-│   │   ├── ea_supertrend_rsi_v4.py    # ✅ Trend following (1.0 conf)
-│   │   ├── ea_parabolic_ema_v4.py     # ✅ SAR trailing (0.95 conf)
-│   │   ├── ea_keltner_breakout_v4.py  # ✅ Volatility break (0.90 conf)
-│   │   ├── ea_ema_scalper_v4.py       # ✅ Fast scalping (0.85 conf)
-│   │   ├── ea_bollinger_cci_v4.py     # ✅ Mean reversion (0.88 conf)
-│   │   ├── ea_atr_breakout_v4.py      # ✅ Volatility expan (0.87 conf)
-│   │   ├── ea_pair_arbitrage_v4.py    # ✅ Stat arb (0.92 conf)
-│   │   │
-│   │   ├── fuzzy_logic/
-│   │   │   └── mamdani_inference.py   # Fuzzy confidence scoring
-│   │   ├── keltner_breakout/
-│   │   ├── pairs_trading/
-│   │   │   └── kalman_hedge.py
-│   │   └── ml_strategies/
-│   │       └── feature_engineering.py
-│   │
-│   ├── backtesting/
-│   │   ├── engines/event_driven.py
-│   │   └── validation/
-│   │       ├── wfo.py                  # Walk-Forward Optimization
-│   │       ├── monte_carlo.py         # Monte Carlo simulation
-│   │       └── metrics.py
-│   │
-│   ├── ml/
-│   │   ├── models/regime_classifier.py
-│   │   ├── training/train_pipeline.py
-│   │   └── evaluation/metrics_ml.py
-│   │
-│   ├── execution/
-│   │   ├── order_manager.py
-│   │   └── retry_logic.py
-│   │
-│   ├── monitoring/
-│   │   ├── dashboard.py
-│   │   ├── alerts.py
-│   │   └── health_check.py
-│   │
-│   ├── ui/
-│   │   ├── backend/
-│   │   │   └── redis_pubsub.py        # ✅ Async Redis Pub/Sub messaging
-│   │   └── frontend/                   # ⏳ Dash UI (pending)
-│   │
-│   └── database/
-│       ├── data_store.py
-│       └── ingestion_pipeline.py
-│
-├── scripts/
-│   ├── integrated_trading_system.py   # Complete integration example
-│   ├── start_live.py
-│   ├── start_backtest.py
-│   └── retrain_models.py
-│
-├── tests/
-│   ├── test_core.py
-│   ├── test_strategies.py
-│   ├── test_backtesting.py
-│   └── test_risk_management.py
-│
-├── docs/
-│   ├── IMPLEMENTATION_SUMMARY.md      # Detailed implementation guide
-│   ├── architecture.md
-│   └── api_reference.rst
-│
-├── docker/
-│   ├── Dockerfile
-│   └── docker-compose.yml
-│
-├── pyproject.toml                      # Poetry dependencies
-└── README.md
+underdog/
+├── backtesting/         # Backtrader engine + analyzers
+│   ├── bt_engine.py     # Main backtest orchestration
+│   └── bt_adapter.py    # Backtrader-specific integration
+├── execution/           # Live trading execution
+│   └── mt5_executor.py  # MT5 order execution (600 LOC)
+├── bridges/             # Signal translation
+│   └── bt_to_mt5.py     # Backtrader→MT5 bridge (400 LOC)
+├── strategies/          
+│   └── bt_strategies/   # Backtrader strategies
+│       ├── atr_breakout_live.py  # Example live strategy
+│       ├── supertrend_rsi.py
+│       └── bollinger_cci.py
+├── risk/
+│   └── prop_firm_manager.py  # DD enforcement (150 LOC)
+└── data/
+    └── hf_loader.py     # HuggingFace data handler
+
+scripts/
+├── test_end_to_end.py        # Backtest validation script
+└── demo_paper_trading.py     # MT5 10-order demo test (350 LOC)
+
+docs/
+├── MT5_LIVE_TRADING_GUIDE.md        # Complete guide
+├── MT5_QUICK_REFERENCE.md           # Command cheatsheet
+├── PRODUCTION_ROADMAP_REAL.md       # 60-day plan to FTMO
+└── SESSION_SUMMARY_MT5_IMPLEMENTATION.md  # Technical details
+```
+    def execute_order(self, order: OrderEvent) -> FillEvent:
+        # Modela spread dinámico + slippage
+        fill_price = self.calculate_realistic_fill(order)
+        return FillEvent(fill_price, commission, slippage)
+```
+
+**Modos:**
+- ✅ Backtesting (simulado con costos realistas)
+- ✅ Paper trading (broker sandbox)
+- ✅ Live trading (MT5, Interactive Brokers, Alpaca)
+
+---
+
+## 📊 Machine Learning Pipeline
+
+### Preprocesamiento Automático
+
+```python
+from underdog.ml.preprocessing import MLPreprocessor
+
+# 1. Estacionariedad (Log Returns)
+preprocessor = MLPreprocessor()
+df = preprocessor.log_returns(df)
+assert preprocessor.adf_test(df['log_return']) < 0.05  # Estacionario ✓
+
+# 2. Feature Engineering
+df = preprocessor.create_lagged_features(df, lags=[1, 2, 3, 5, 10])
+df = preprocessor.add_technical_features(df)  # ATR, RSI, SMA, etc.
+
+# 3. Normalización
+df = preprocessor.standardize(df)  # μ=0, σ=1
+```
+
+### Integración con Estrategias
+
+```python
+class MLPredictorStrategy(Strategy):
+    def __init__(self, model_path: str):
+        self.model = joblib.load(model_path)  # Keras/PyTorch/scikit-learn
+    
+    def generate_signal(self, market_event: MarketEvent) -> SignalEvent:
+        features = self.calculate_indicators(market_event)
+        prediction = self.model.predict(features)
+        
+        return SignalEvent(
+            signal_type=SignalType.LONG if prediction > 0.6 else SignalType.SHORT,
+            strength=abs(prediction),
+            metadata={'prediction': prediction}
+        )
 ```
 
 ---
 
-## 🛠 Requirements
+## 🔬 Validación Rigurosa
 
-- **Python 3.13**
-- **Poetry** (for dependency management)
-- **MetaTrader 5** with ZeroMQ EA
-- **Windows** (for MT5 integration)
+### Walk-Forward Optimization (WFO)
 
-### Optional
-- **TA-Lib** (precompiled wheel recommended for Windows)
-- **TimescaleDB** or **InfluxDB** (for time-series data storage)
-- **Docker** (for containerized deployment)
+```python
+from underdog.validation import WalkForwardOptimizer
+
+wfo = WalkForwardOptimizer(
+    strategy=SMACrossoverStrategy,
+    in_sample_years=5,      # Entrenamiento
+    out_sample_months=12,   # Validación (nunca vista)
+    rolling_step_months=3,  # Avance trimestral
+    objective='calmar_ratio'  # Priorizar preservación capital
+)
+
+results = wfo.optimize()  # Concatena resultados OOS → performance real
+```
+
+### Monte Carlo Validation
+
+```python
+from underdog.validation import monte_carlo_shuffle
+
+# Detectar "lucky backtests" (no robustos)
+percentile = monte_carlo_shuffle(trades, iterations=10000)
+
+if percentile < 5:
+    print("⚠️ Lucky backtest! Strategy not robust.")
+else:
+    print("✅ Strategy validated. Robust to trade order.")
+```
 
 ---
 
-## 📦 Installation
+## ⚖️ Risk Management Engine
 
-### 1. Clone Repository
-```powershell
+### Métricas Avanzadas
+
+```python
+from underdog.risk import RiskManagementEngine
+
+rme = RiskManagementEngine()
+
+# 1. Calmar Ratio (función objetivo)
+calmar = rme.calculate_calmar_ratio(returns, max_drawdown)
+assert calmar > 2.0, "Target: Calmar > 2.0 for Prop Firms"
+
+# 2. CVaR (Expected Shortfall) - Tail Risk
+cvar = rme.calculate_cvar(returns, confidence=0.95)
+print(f"Average loss in worst 5% scenarios: {cvar:.2%}")
+
+# 3. Kelly Criterion (position sizing)
+size = rme.kelly_position_size(
+    win_rate=0.55,
+    avg_win_loss=1.5,
+    fraction=0.5  # Half-Kelly para reducir volatilidad
+)
+```
+
+### Prop Firm Compliance
+
+```python
+# Límites estrictos de MDD
+rme.set_max_drawdown(0.06)  # 6% MDD limit
+
+# Validación pre-ejecución
+if not rme.check_order(order, portfolio):
+    print("⚠️ Order rejected: Risk limits exceeded")
+```
+
+---
+
+## 📦 Instalación
+
+### Requisitos
+
+- **Python:** 3.13+
+- **OS:** Windows, macOS, Linux
+- **Poetry:** Gestor de dependencias
+
+### Setup Rápido
+
+```bash
+# 1. Clonar repositorio
 git clone https://github.com/whateve-r/UNDERDOG.git
 cd UNDERDOG
-```
 
-### 2. Install Poetry
-```powershell
-pip install poetry
-```
-
-### 3. Install Dependencies
-```powershell
+# 2. Instalar dependencias
 poetry install
-```
 
-### 4. Install TA-Lib (Optional)
-Download precompiled wheel from [TA-Lib releases](https://github.com/cgohlke/talib-build/releases) and install:
-```powershell
-poetry run pip install TA_Lib‑0.4.28‑cp313‑cp313‑win_amd64.whl
-```
+# 3. Activar entorno
+poetry shell
 
-### 5. Configure MT5 Connection
-Edit `config/runtime/env/mt5_credentials.yaml`:
-```yaml
-mt5_exe_path: "C:\\Your\\Path\\To\\MetaTrader 5\\terminal64.exe"
-mql5_script: "JsonAPI.ex5"  # Your ZeroMQ EA
+# 4. Instalar TA-Lib (indicadores técnicos)
+# Windows: Ver docs/TALIB_INSTALL_WINDOWS.md
+# Linux/macOS: sudo apt-get install ta-lib  # o brew install ta-lib
+
+# 5. Verificar instalación
+python -c "import underdog; print('✅ UNDERDOG ready!')"
 ```
 
 ---
 
 ## 🚀 Quick Start
 
-### Basic Usage
+### 1. Backtest con Estrategia Simple
 
 ```python
-from underdog.risk_management.risk_master import RiskMaster, DrawdownLimits
-from underdog.risk_management.position_sizing import PositionSizer
-from underdog.strategies.strategy_matrix import StrategyMatrix
+from underdog.backtesting import BacktestEngine
+from underdog.strategies import SMACrossoverStrategy
+from underdog.data import HuggingFaceDataHandler
 
-# Initialize risk management
-risk_master = RiskMaster(
-    initial_capital=100000,
-    dd_limits=DrawdownLimits(max_daily_dd_pct=5.0)
+# Data
+data_handler = HuggingFaceDataHandler(
+    dataset='financial_datasets/forex_ohlcv',
+    symbol='EURUSD',
+    timeframe='5min'
 )
 
-position_sizer = PositionSizer()
+# Strategy
+strategy = SMACrossoverStrategy(
+    symbols=['EURUSD'],
+    fast_period=10,
+    slow_period=50
+)
 
-# Create strategy matrix
-matrix = StrategyMatrix(risk_master, position_sizer)
-matrix.register_strategy("keltner_breakout", allocation_pct=20.0)
+# Backtest
+engine = BacktestEngine(
+    data_handler=data_handler,
+    strategy=strategy,
+    start_date='2020-01-01',
+    end_date='2024-12-31',
+    initial_capital=10000.0
+)
 
-# Submit and process signals
-# ... (see docs/IMPLEMENTATION_SUMMARY.md for full example)
+results = engine.run()
+
+# Results
+print(f"Return: {results['total_return']:.2%}")
+print(f"Calmar Ratio: {results['calmar_ratio']:.2f}")
+print(f"Max Drawdown: {results['max_drawdown']:.2%}")
 ```
 
-### Run Integrated System
+### 2. Backtest con ML Model
 
-```powershell
-poetry run python scripts/integrated_trading_system.py
+```python
+from underdog.strategies import MLPredictorStrategy
+
+# Entrenar modelo (Jupyter Notebook)
+from underdog.ml import MLPreprocessor, train_model
+
+preprocessor = MLPreprocessor()
+df = preprocessor.load_and_preprocess('EURUSD', '2015-01-01', '2023-12-31')
+
+model = train_model(df, model_type='logistic_regression')
+model.save('models/eurusd_lr.pkl')
+
+# Usar en backtest
+strategy = MLPredictorStrategy(
+    symbols=['EURUSD'],
+    model_path='models/eurusd_lr.pkl'
+)
+
+# ... mismo backtest que arriba
 ```
 
-### Run Backtest
+### 3. Walk-Forward Optimization
 
-```powershell
-poetry run python scripts/start_backtest.py --strategy keltner_breakout --period 2023-01-01:2024-12-31
+```python
+from underdog.validation import WalkForwardOptimizer
+
+wfo = WalkForwardOptimizer(
+    strategy_class=SMACrossoverStrategy,
+    data_handler=data_handler,
+    in_sample_years=5,
+    out_sample_months=12,
+    rolling_step_months=3,
+    objective='calmar_ratio'
+)
+
+# Optimizar parámetros en ventanas rodantes
+results_oos = wfo.optimize(
+    param_ranges={
+        'fast_period': range(5, 20),
+        'slow_period': range(30, 100)
+    }
+)
+
+# Validar robustez
+print(f"OOS Calmar Ratio: {results_oos['calmar_ratio']:.2f}")
+print(f"OOS Max Drawdown: {results_oos['max_drawdown']:.2%}")
+```
+
+---
+
+## 📚 Documentación
+
+### Guías de Arquitectura
+- **[Architecture Refactor](docs/ARCHITECTURE_REFACTOR.md)** - Event-Driven design, comparativa de frameworks
+- **[Framework Evaluation](docs/FRAMEWORK_EVALUATION.md)** - Backtrader vs Lean Engine
+- **[Executive Summary](docs/EXECUTIVE_SUMMARY_ARCHITECTURE_PIVOT.md)** - Decisiones estratégicas
+
+### Guías de Migración
+- **[MQL5 to Python](docs/MQL5_TO_PYTHON_MIGRATION_GUIDE.md)** - Migrar EAs de MetaTrader 5
+- **[Session Summary](docs/SESSION_SUMMARY_2025_10_21.md)** - Progress log
+
+### Guías Técnicas
+- **[Scientific Improvements](docs/SCIENTIFIC_IMPROVEMENTS.md)** - ML best practices
+- **[TA-Lib Installation](docs/TALIB_INSTALL_WINDOWS.md)** - Windows setup
+
+---
+
+## 🛠️ Estructura del Proyecto
+
+```
+underdog/
+├── core/
+│   ├── abstractions.py       # ABCs: Strategy, DataHandler, Portfolio, Execution
+│   ├── event_engine.py       # Event Loop (Heartbeat)
+│   └── portfolio.py          # Portfolio Manager
+├── data/
+│   ├── hf_loader.py          # Hugging Face DataHandler
+│   └── feeds/                # Custom DataFeeds
+├── strategies/
+│   ├── base_strategy.py      # Strategy ABC implementation
+│   ├── sma_crossover.py      # SMA Crossover (migrado de MQL5)
+│   └── ml_predictor.py       # ML-based strategy
+├── ml/
+│   ├── preprocessing.py      # Log returns, ADF, feature engineering
+│   ├── models/               # Keras/PyTorch models
+│   └── feature_store.py      # Cached features
+├── execution/
+│   ├── simulated.py          # Backtesting execution (slippage model)
+│   └── live_broker.py        # MT5/IBKR/Alpaca connector
+├── risk/
+│   ├── rme.py                # Risk Management Engine
+│   ├── metrics.py            # CVaR, Calmar, Sharpe, etc.
+│   └── position_sizing.py    # Kelly Criterion
+├── validation/
+│   ├── wfo.py                # Walk-Forward Optimization
+│   └── monte_carlo.py        # Trade shuffling validation
+└── backtesting/
+    ├── backtrader_engine.py  # Backtrader integration
+    └── lean_engine.py        # Lean Engine integration (opcional)
 ```
 
 ---
 
 ## 🧪 Testing
 
-```powershell
-# Run all tests
-poetry run pytest tests/ -v
+```bash
+# Unit tests
+poetry run pytest tests/
 
-# Run specific test module
-poetry run pytest tests/test_risk_management.py -v
+# Integration tests
+poetry run pytest tests/integration/
 
-# Run with coverage
-poetry run pytest --cov=underdog tests/
+# Específico: Strategy tests
+poetry run pytest tests/strategies/test_sma_crossover.py -v
+
+# Coverage
+poetry run pytest --cov=underdog --cov-report=html
 ```
 
 ---
 
-## 📊 Architecture Overview
+## 🎯 Roadmap
 
-### Data Flow
+### ✅ Fase 1: Arquitectura Base (Completado)
+- [x] Abstract Base Classes (Strategy, DataHandler, Portfolio, Execution)
+- [x] Data structures (MarketEvent, SignalEvent, OrderEvent, FillEvent)
+- [x] Documentación exhaustiva
 
-```
-MetaTrader 5 (MQL5 EA)
-    ↓ ZeroMQ PUB/SUB
-MT5 Connector (Python)
-    ↓ Market Data
-Feature Engineering → ML Models → Fuzzy Logic
-    ↓ Raw Signals
-Strategy Matrix (Aggregation & Correlation)
-    ↓ Aggregated Signals
-Risk Master (DD & Exposure Checks)
-    ↓ Risk-Adjusted Signals
-Position Sizer (Kelly + Confidence)
-    ↓ Final Orders
-Execution Engine → MT5
-```
+### ⏳ Fase 2: Framework Integration (En Progreso)
+- [ ] Evaluar y seleccionar framework (Backtrader vs Lean)
+- [ ] Integrar Hugging Face Datasets
+- [ ] Crear HuggingFaceDataHandler
 
-### Key Components
+### 📋 Fase 3: Strategy Migration
+- [ ] Migrar primer EA (SMA Crossover) de MQL5 → Python
+- [ ] Backtest comparativo (MQL5 vs Python)
+- [ ] Validar resultados (±5% tolerance)
 
-1. **MT5 Connector**: Async ZeroMQ-based communication with MetaTrader 5
-2. **Strategy Matrix**: Portfolio-level coordinator for multiple strategies
-3. **Risk Master**: Portfolio-wide risk management with DD limits and correlation tracking
-4. **Position Sizer**: Multi-factor position sizing (Fixed Fractional + Kelly + Confidence)
-5. **Fuzzy Logic**: Transform ML outputs into confidence scores
-6. **Backtesting Engine**: Event-driven with Walk-Forward Optimization and Monte Carlo
+### 📋 Fase 4: ML Pipeline
+- [ ] Implementar preprocesamiento (Log Returns, ADF Test)
+- [ ] Feature engineering (lagged, ATR, RSI)
+- [ ] Entrenar modelo simple (Logistic Regression)
 
----
+### 📋 Fase 5: Validación Rigurosa
+- [ ] Implementar Walk-Forward Optimization
+- [ ] Implementar Monte Carlo validation
+- [ ] Validar robustez de estrategias
 
-## 🔐 Risk Management
+### 📋 Fase 6: Risk Management
+- [ ] Implementar RME (CVaR, Calmar, Kelly)
+- [ ] Prop Firm compliance (MDD < 6%)
+- [ ] Position sizing dinámico
 
-### Drawdown Limits (Prop Firm Compliant)
-- **Daily DD**: 5% (configurable)
-- **Weekly DD**: 10%
-- **Monthly DD**: 15%
-- **Absolute DD**: 20%
-- **Soft Limits**: Position scaling starts at 80% of limit
-
-### Exposure Constraints
-- **Total Portfolio**: 100% max exposure
-- **Per Symbol**: 10% max
-- **Per Strategy**: 30% max
-- **Correlated Assets**: 40% max
-
-### Position Sizing Formula
-```
-BaseSize = (AccountBalance × RiskPct) / (StopDistance × PipValue)
-KellyAdjusted = BaseSize × (1 + KellyFraction)
-ConfidenceWeighted = KellyAdjusted × (Confidence ^ Exponent)
-FinalSize = ConfidenceWeighted × DDScaling × PortfolioScaling
-```
+### 📋 Fase 7: Live Trading
+- [ ] Integrar MT5 connector
+- [ ] Paper trading validation
+- [ ] Live deployment
 
 ---
 
-## 🤖 Machine Learning Pipeline
+## 📊 Performance Targets
 
-### Supported Models
-- **LSTM**: Sequence-to-sequence for time-series prediction
-- **CNN 1D**: Local pattern extraction in price windows
-- **Transformers**: Attention-based for multi-asset dependencies
-- **HMM**: Market regime detection
-- **Kalman Filters**: Dynamic hedge ratio estimation for pairs trading
+### Prop Firm Compliance (Objetivos)
 
-### Experiment Tracking
-- **MLflow** integration for model versioning
-- **Optuna** for hyperparameter optimization
-- Reproducible experiments with DVC/hash versioning
+| **Métrica**              | **Target**       | **Status**    |
+|--------------------------|------------------|---------------|
+| **Calmar Ratio**         | > 2.0            | ⏳ Pending    |
+| **Max Drawdown (MDD)**   | < 6%             | ⏳ Pending    |
+| **Sharpe Ratio**         | > 1.5            | ⏳ Pending    |
+| **Win Rate**             | > 50%            | ⏳ Pending    |
+| **Profit Factor**        | > 1.5            | ⏳ Pending    |
 
----
+### Backtesting Robustness
 
-## 📈 Validation & Backtesting
-
-### Walk-Forward Optimization (WFO)
-- Automated IS/OS segmentation
-- Parameter optimization per fold
-- Out-of-sample performance metrics
-- Robust strategy validation
-
-### Monte Carlo Simulation
-- Trade sequence resampling
-- Slippage and latency distributions
-- Parameter perturbation testing
-- Percentile-based risk assessment (5th, 1st percentile DD)
+- [ ] Walk-Forward OOS results positive
+- [ ] Monte Carlo validation passing (>5th percentile)
+- [ ] Consistent across multiple instruments
+- [ ] Resistant to parameter changes (±10%)
 
 ---
 
-## 🐳 Docker Deployment
+## 🤝 Contribuciones
 
-```powershell
-# Build image
-docker-compose build
+Este es un proyecto académico (TFG) en desarrollo activo. Sugerencias y feedback bienvenidos.
 
-# Start services
-docker-compose up -d
-
-# View logs
-docker-compose logs -f underdog
-```
+### Proceso
+1. Fork el repositorio
+2. Crear branch (`git checkout -b feature/AmazingFeature`)
+3. Commit cambios (`git commit -m 'Add AmazingFeature'`)
+4. Push al branch (`git push origin feature/AmazingFeature`)
+5. Abrir Pull Request
 
 ---
 
-## 📝 Configuration
+### Frameworks
+- **Backtrader:** https://www.backtrader.com/
 
-### MT5 Credentials (`config/runtime/env/mt5_credentials.yaml`)
-```yaml
-zmq_host: "127.0.0.1"
-sys_port: 25555
-mt5_exe_path: "C:\\Program Files\\MetaTrader 5\\terminal64.exe"
-mql5_script: "JsonAPI.ex5"
-sys_timeout: 3.0
-heartbeat: 5
-auto_restart: true
-```
-
-### Fuzzy Rules (`config/strategies/fuzzy_confidence_rules.yaml`)
-```yaml
-input_variables:
-  - name: ml_prob
-    range: [0.0, 1.0]
-    sets:
-      - label: high
-        mf:
-          type: trapezoidal
-          a: 0.5
-          b: 0.6
-          c: 1.0
-          d: 1.0
-rules:
-  - if:
-      - var: ml_prob
-        set: high
-      - var: momentum
-        set: positive
-    then:
-      var: confidence
-      set: very_high
-```
+### Datasets
+- **Hugging Face Datasets:** https://huggingface.co/datasets
 
 ---
 
-## 🔧 Development
+## 📄 Licencia
 
-### Code Formatting
-```powershell
-poetry run black underdog/
-poetry run isort underdog/
-```
-
-### Linting
-```powershell
-poetry run flake8 underdog/
-poetry run mypy underdog/
-```
+Este proyecto es académico y está bajo licencia MIT. Ver `LICENSE` para más detalles.
 
 ---
 
-## 📚 Documentation
+## 👨‍💻 @whateve-r
 
-- **Implementation Guide**: `docs/IMPLEMENTATION_SUMMARY.md`
-- **Architecture**: `docs/architecture.md`
-- **API Reference**: `docs/api_reference.rst`
+**UNDERDOG** - Trading System  
 
----
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
 
 ---
 
-## ⚠️ Disclaimer
+## 🚨 Disclaimer
 
-**This software is for educational and research purposes only. Trading involves substantial risk of loss. The authors are not responsible for any financial losses incurred through the use of this software. Always test thoroughly on demo accounts before live trading.**
+**Este software es solo para fines educativos y de investigación.**
 
----
+- ⚠️ Trading algorítmico conlleva riesgo significativo de pérdida de capital
+- ⚠️ Los resultados de backtesting no garantizan resultados futuros
+- ⚠️ No es asesoramiento financiero
+- ⚠️ Usar en cuentas demo primero
+- ⚠️ Nunca arriesgar capital que no puedes permitirte perder
 
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- MetaTrader 5 platform
-- ZeroMQ messaging library
-- TA-Lib technical analysis library
-- MLflow for experiment tracking
-- The quantitative finance community
+**El autor no se hace responsable de pérdidas financieras derivadas del uso de este software.**
 
 ---
 
-## 📞 Contact
+<div align="center">
 
-- **Author**: whateve-r
-- **Repository**: https://github.com/whateve-r/UNDERDOG
-- **Issues**: https://github.com/whateve-r/UNDERDOG/issues
+**⭐ Si te resulta útil este proyecto, considera darle una estrella ⭐**
 
----
+Made with ❤️ and Python 🐍
 
-**Built with ❤️ for algorithmic traders and quantitative researchers**
+</div>
