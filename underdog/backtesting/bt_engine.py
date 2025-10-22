@@ -41,7 +41,8 @@ from typing import Dict, Optional, Tuple, List
 import logging
 
 from underdog.backtesting.bt_adapter import get_strategy_class
-from underdog.data.hf_loader import HuggingFaceDataHandler
+# TODO: Migrate to MT5HistoricalDataLoader + TimescaleDB
+# from underdog.data.mt5_historical_loader import MT5HistoricalDataLoader
 from underdog.validation.monte_carlo import validate_backtest
 from underdog.validation.wfo import WalkForwardOptimizer
 
@@ -58,61 +59,26 @@ def load_data_for_backtest(
     """
     Load data for backtesting.
     
-    Priority:
-    1. HuggingFace (if use_hf=True and authenticated)
-    2. Synthetic data (if use_synthetic=True)
-    3. Error
+    TODO: Migrate to MT5HistoricalDataLoader + TimescaleDB
+    Currently falls back to synthetic data generation.
     
     Returns:
     --------
     DataFrame with columns: datetime, open, high, low, close, volume
     """
+    # TODO: Remove HuggingFace logic after TimescaleDB migration
+    # if use_hf:
+    #     try:
+    #         logger.info(f"Attempting to load HuggingFace data for {symbol}")
+    #         handler = HuggingFaceDataHandler(...)
+    #         ...
+    #     except Exception as e:
+    #         logger.warning(f"HuggingFace load failed: {e}")
+    #         if not use_synthetic:
+    #             raise
+    
     if use_hf:
-        try:
-            logger.info(f"Attempting to load HuggingFace data for {symbol}")
-            
-            # HuggingFaceDataHandler has built-in synthetic fallback
-            handler = HuggingFaceDataHandler(
-                dataset_id='elthariel/histdata_fx_1m',
-                symbol=symbol,
-                start_date=start_date,
-                end_date=end_date
-            )
-            
-            # Get data from handler
-            df = handler.df.copy()
-            
-            # Ensure datetime is a column (not index)
-            if isinstance(df.index, pd.DatetimeIndex):
-                df = df.reset_index()
-                if 'timestamp' in df.columns:
-                    df.rename(columns={'timestamp': 'datetime'}, inplace=True)
-                elif df.index.name == 'timestamp':
-                    df['datetime'] = df.index
-                else:
-                    # Index is already datetime
-                    df['datetime'] = df.index
-            
-            # Ensure we have required columns
-            required_cols = ['datetime', 'open', 'high', 'low', 'close', 'volume']
-            missing_cols = [col for col in required_cols if col not in df.columns]
-            if missing_cols:
-                raise ValueError(f"Missing required columns: {missing_cols}. Available: {df.columns.tolist()}")
-            
-            # Set datetime as index for Backtrader
-            df.set_index('datetime', inplace=True)
-            
-            # Keep only OHLCV columns (drop bid/ask if present)
-            ohlcv_cols = ['open', 'high', 'low', 'close', 'volume']
-            df = df[ohlcv_cols]
-            
-            logger.info(f"✓ Loaded {len(df):,} bars from HuggingFace ({df.index[0]} to {df.index[-1]})")
-            return df
-            
-        except Exception as e:
-            logger.warning(f"HuggingFace load failed: {e}")
-            if not use_synthetic:
-                raise
+        logger.warning("HuggingFace loader removed. Use MT5 + TimescaleDB. Falling back to synthetic data.")
     
     if use_synthetic:
         # Generate synthetic data with realistic volatility
