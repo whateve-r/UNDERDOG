@@ -50,6 +50,7 @@ requests = "^2.32.3"           # http-requests-for-webhooks
 # Database & Time Series (Optional but recommended)
 # influxdb-client = "^2.0.0"
 psycopg2-binary = "^2.9.9"     # postgresql-driver-for-timescaledb
+asyncpg = ">=0.30.0"            # async-postgresql-driver-for-timescaledb (py313-compatible)
 sqlalchemy = "^2.0.32"         # orm-for-database
 alembic = "^1.13.3"            # database-migrations
 tornado = ">=6.1"

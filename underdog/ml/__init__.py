@@ -1,21 +1,22 @@
 """
 Machine Learning Components for UNDERDOG
 
-Deep Reinforcement Learning (DRL) architecture for adaptive trading:
+Traditional ML models and feature engineering:
 - Regime-Switching Classification (GMM + XGBoost)
-- DRL Agents (TD3, PPO) for signal integration
-- Sentiment Analysis (FinGPT, FinBERT)
+- Volatility models (HAR, GARCH)
 - Feature Engineering
+- Preprocessing pipelines
+
+Note: DRL agents moved to underdog/rl/
+Note: Sentiment analysis moved to underdog/sentiment/
 
 Papers:
-- arXiv:2510.04952v2 (Safe Execution)
-- arXiv:2510.10526v1 (LLM + RL)
 - arXiv:2510.03236v1 (Regime-Switching)
 """
 
+# Import from new locations for backward compatibility
+from underdog.ml.models.regime_classifier import RegimeSwitchingModel
+
 __all__ = [
     'RegimeSwitchingModel',
-    'TradingDRLAgent',
-    'FinGPTSentimentAnalyzer',
-    'TradingEnvironment',
 ]

@@ -81,6 +81,31 @@ services:
         max-file: "3"
 
   # ===========================================================================
+  # Redis (Hot Cache for Features)
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: underdog-redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - underdog-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # ===========================================================================
   # Prometheus (Metrics Collection)
   # ===========================================================================
   prometheus:
@@ -150,6 +175,8 @@ networks:
 # =============================================================================
 volumes:
   timescaledb-data:
+    driver: local
+  redis-data:
     driver: local
   prometheus-data:
     driver: local

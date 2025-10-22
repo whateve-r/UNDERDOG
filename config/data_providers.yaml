@@ -1,0 +1,221 @@
+# =============================================================================
+# UNDERDOG Trading System - API Configuration
+# External Data Providers (100% FREE APIs)
+# =============================================================================
+
+# =============================================================================
+# Reddit API (Sentiment Data from r/forex, r/wallstreetbets)
+# =============================================================================
+# Setup Instructions:
+# 1. Go to: https://www.reddit.com/prefs/apps
+# 2. Click "Create App" or "Create Another App"
+# 3. Select "script" type
+# 4. Name: "underdog-trading-bot"
+# 5. Redirect URI: http://localhost:8080
+# 6. Get: client_id (under app name) and client_secret
+#
+# Free Tier: Unlimited requests (with rate limit 60 req/min)
+# Cost: $0/month
+
+reddit:
+  client_id: "IzxXWdusF4dEhpuxwuuQYQ"  # Replace with actual ID
+  client_secret: "n_HK47PG95h1yjOXLBB76VoVW5ekXQ"  # Replace with actual secret
+  user_agent: "underdog"
+  subreddits:
+    - "forex"
+    - "Forex"
+    - "wallstreetbets"
+    - "trading"
+    - "forex_trades"
+    - "algotrading"
+    - "FOREXTRADING"
+    - "Daytrading"
+  polling_interval_minutes: 15  # Collect sentiment every 15 min
+  lookback_hours: 24  # Analyze posts from last 24h
+
+# =============================================================================
+# FRED API (Federal Reserve Economic Data - Macro Indicators)
+# =============================================================================
+# Setup Instructions:
+# 1. Go to: https://fred.stlouisfed.org/docs/api/api_key.html
+# 2. Click "Request API Key"
+# 3. Fill form (name, email, organization: "Personal Research")
+# 4. Instant approval - copy API key
+#
+# Free Tier: 120 requests/minute, unlimited daily
+# Cost: $0/month
+
+fred:
+  api_key: "8b908fe651eccf866411068423dd5068"  # Replace with actual key
+  series:
+    vix: "VIXCLS"  # CBOE Volatility Index
+    fed_rate: "DFF"  # Federal Funds Effective Rate
+    treasury_10y: "DGS10"  # 10-Year Treasury Constant Maturity Rate
+    treasury_2y: "DGS2"  # 2-Year Treasury Constant Maturity Rate
+    unemployment: "UNRATE"  # Unemployment Rate
+    cpi: "CPIAUCSL"  # Consumer Price Index
+    gdp: "GDP"  # Gross Domestic Product
+  update_frequency: "daily"  # Fetch once per day (EOD)
+  update_time_utc: "17:00"  # After US market close
+
+# =============================================================================
+# FinGPT / FinBERT (Sentiment Analysis Model)
+# =============================================================================
+# Pre-trained models from Hugging Face (NO API KEY REQUIRED)
+# Download once, use offline
+#
+# Free Tier: Unlimited local inference
+# Cost: $0/month
+
+fingpt:
+  model_name: "ProsusAI/finbert"  # FinBERT for sentiment analysis
+  device: "cpu"  # Change to "cuda" if GPU available
+  max_length: 512  # Max tokens for model input
+  batch_size: 16  # Process 16 texts at once
+  cache_dir: "models/finbert"  # Local cache for model weights
+
+# =============================================================================
+# Alpha Vantage (Optional - Backup for Macro Data)
+# =============================================================================
+# Setup Instructions:
+# 1. Go to: https://www.alphavantage.co/support/#api-key
+# 2. Enter email
+# 3. Instant API key (free tier)
+#
+# Free Tier: 25 requests/day (limited, use FRED instead)
+# Cost: $0/month (free tier), $50/month (premium)
+
+alpha_vantage:
+  api_key: "N5B3DFCFSWKS5B59"  # Optional - backup only
+  enabled: false  # Disabled by default (use FRED instead)
+
+# =============================================================================
+# News APIs (Optional - For Advanced Sentiment)
+# =============================================================================
+# NewsAPI.org:
+#   Free Tier: 100 requests/day (developer plan)
+#   Cost: $0/month (free), $449/month (business)
+#   URL: https://newsapi.org/register
+#
+# We use RSS feeds instead (100% free, unlimited)
+
+news_api:
+  enabled: false  # Use RSS feeds instead (free, unlimited)
+  api_key: "YOUR_NEWS_API_KEY"  # Optional
+
+# =============================================================================
+# Twitter/X API (Optional - Real-time Sentiment)
+# =============================================================================
+# Setup Instructions:
+# 1. Go to: https://developer.twitter.com/en/portal/dashboard
+# 2. Create App (Free tier: 1500 tweets/month)
+# 3. Get Bearer Token
+#
+# Free Tier: 1500 tweets/month, 50 req/month
+# Cost: $0/month (free), $100/month (basic)
+#
+# NOTE: Limited free tier, use Reddit instead
+
+twitter:
+  enabled: false  # Use Reddit instead (better free tier)
+  bearer_token: "YOUR_TWITTER_BEARER_TOKEN"  # Optional
+  search_queries:
+    - "EURUSD OR EUR/USD lang:en"
+    - "GBPUSD OR GBP/USD lang:en"
+    - "forex trading lang:en"
+
+# =============================================================================
+# MT5 Broker Connection (Live Streaming Data)
+# =============================================================================
+# Your broker account (already configured in docker/.env)
+# ZMQ connector handles real-time tick streaming
+
+mt5:
+  zmq_host: "localhost"
+  zmq_sys_port: 32768
+  zmq_live_port: 32769
+  zmq_stream_port: 32770
+  zmq_data_port: 32771
+  symbols:
+    - "EURUSD"  # Trading major (high liquidity)
+    - "GBPUSD"  # Trading major (high volatility)
+    - "USDJPY"  # Trading major (interest rate proxy)
+    - "XAUUSD"  # Safe haven commodity
+    - "SPXUSD"  # S&P 500 Index (risk regime indicator)
+    - "USDXUSD" # US Dollar Index (USD strength indicator)
+  streaming_enabled: true
+
+# =============================================================================
+# TimescaleDB Connection (Data Storage)
+# =============================================================================
+timescaledb:
+  host: "localhost"
+  port: 5432
+  database: "underdog_trading"
+  user: "underdog"
+  password: "underdog_trading_2024_secure"  # From docker/.env
+  pool_size: 10
+  pool_timeout: 30
+
+# =============================================================================
+# Redis Connection (Hot Cache)
+# =============================================================================
+redis:
+  host: "localhost"
+  port: 6379
+  db: 0
+  password: null  # No password by default
+  cache_ttl_seconds: 3600  # 1 hour TTL for features
+  max_memory: "512mb"
+
+# =============================================================================
+# Data Ingestion Schedule
+# =============================================================================
+ingestion:
+  mt5_streaming:
+    enabled: true
+    symbols: ["EURUSD", "GBPUSD", "USDJPY", "XAUUSD", "SPXUSD", "USDXUSD"]  # 4 trading + 2 macro
+    target_latency_ms: 100
+  
+  sentiment_pooling:
+    enabled: true
+    interval_minutes: 15
+    sources: ["reddit", "news_rss"]
+  
+  macro_indicators:
+    enabled: true
+    update_time_utc: "17:00"  # Daily after US market close
+    sources: ["fred"]
+  
+  regime_detection:
+    enabled: true
+    interval_minutes: 60  # Update regime every hour
+    model_path: "models/regime_classifier_xgboost.pkl"
+
+# =============================================================================
+# Logging Configuration
+# =============================================================================
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  format: "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+  handlers:
+    console: true
+    file: true
+    file_path: "logs/data_ingestion.log"
+    max_bytes: 10485760  # 10 MB
+    backup_count: 5
+
+# =============================================================================
+# Health Monitoring
+# =============================================================================
+health_check:
+  enabled: true
+  interval_minutes: 5
+  services:
+    - "timescaledb"
+    - "redis"
+    - "mt5_connector"
+    - "reddit_collector"
+    - "fred_collector"
+  alert_on_failure: true
+  alert_threshold_failures: 3  # Alert after 3 consecutive failures

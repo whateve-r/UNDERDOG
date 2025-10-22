@@ -1,0 +1,2 @@
+# Model checkpoints directory
+# Stores trained DRL agent checkpoints (TD3, PPO)
