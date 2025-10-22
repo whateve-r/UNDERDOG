@@ -81,6 +81,11 @@ tensorflow = "^2.20.0"
 redis = "^6.4.0"
 duckdb = "^1.4.1"
 
+# NEW: Deep Reinforcement Learning (DRL) - Papers arXiv:2510.04952v2, arXiv:2510.10526v1
+stable-baselines3 = "^2.2.0"   # ppo-td3-dqn-algorithms-for-trading
+gymnasium = "^0.29.0"          # openai-gym-replacement-trading-environments
+tensorboard = "^2.15.0"        # training-visualization
+
 # NEW: Technical Analysis (Industry Standard)
 TA-Lib = "^0.6.7"              # technical-analysis-library (C-based, high performance)
 
