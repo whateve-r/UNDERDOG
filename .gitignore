@@ -21,6 +21,11 @@ poetry.lock
 *.parquet
 *.log
 
+# Models (too large for GitHub)
+*.pth
+*.pt
+*.ckpt
+
 # Configuration
 .config/
 config/.yaml

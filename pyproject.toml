@@ -8,7 +8,7 @@ readme = "README.md"
 packages = [{include = "underdog"}]
 
 [tool.poetry.dependencies]
-python = "^3.13, <4.0"  # python-version
+python = "^3.11, <3.13"  # PyTorch not compatible with 3.13 yet
 
 # Conectividad y Asíncrono
 pyzmq = "^27.1.0"        # zeromq-bindings-for-python
@@ -103,6 +103,8 @@ fastparquet = "^2024.11.0"
 backtrader = "^1.9.78.123"
 huggingface-hub = "^0.35.3"
 duka = "^0.2.0"
+matplotlib = "^3.10.7"
+seaborn = "^0.13.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.2"          # unitary-tests

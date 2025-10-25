@@ -44,6 +44,7 @@ from typing import Dict, List, Optional
 import numpy as np
 import pandas as pd
 import torch
+import yaml
 
 # Add project root to path
 SCRIPT_DIR = Path(__file__).parent
@@ -137,16 +138,29 @@ class DRLTrainer:
         self.start_date = start_date
         self.end_date = end_date
         
-        # Initialize database connector
-        self.db = TimescaleDBConnector()
+        # Load database configuration from config file
+        config_path = PROJECT_ROOT / 'config' / 'data_providers.yaml'
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+        
+        db_config = config.get('timescaledb', {})
+        
+        # Initialize database connector with proper credentials
+        self.db = TimescaleDBConnector(
+            host=db_config.get('host', 'localhost'),
+            port=db_config.get('port', 5432),
+            database=db_config.get('database', 'underdog_trading'),
+            user=db_config.get('user', 'underdog'),
+            password=db_config.get('password', 'underdog_trading_2024_secure')
+        )
         # Note: Don't call connect() here - it's async and only for async contexts
         # We'll use get_connection() context manager for sync queries
         
         # Agent configuration (optimized from papers)
         if agent_config is None:
             agent_config = TD3Config(
-                state_dim=24,  # Expanded observation space (CMDP + risk features)
-                action_dim=2,  # [position_size, entry/exit]
+                state_dim=29,  # 🧠 Expanded with Market Awareness (VVR, Wick, Liquidity, Opportunity, Confidence)
+                action_dim=1,  # Single continuous action: position size [-1, 1]
                 hidden_dim=256,  # Paper recommendation
                 lr_actor=1e-4,  # Optimized from arXiv:2510.10526v1
                 lr_critic=1e-4,  # Same as actor for stability
@@ -155,7 +169,8 @@ class DRLTrainer:
                 batch_size=256,  # Paper recommendation
                 buffer_size=1_000_000,
                 policy_freq=2,
-                expl_noise=0.1
+                expl_noise=0.1,
+                use_cbrl=True  # 🎲 Enable Chaos-Based RL (intelligent exploration)
             )
         
         self.agent_config = agent_config
@@ -164,7 +179,7 @@ class DRLTrainer:
         if env_config is None:
             env_config = TradingEnvConfig(
                 symbol=self.symbols[0],  # Primary symbol
-                timeframe='1H',  # 1-hour bars for training (better signal/noise)
+                timeframe='M1',  # M1 bars (we have 1M+ bars available)
                 initial_balance=100_000,
                 max_position_size=1.0,
                 commission_pct=0.0002,  # 2 pips spread
@@ -175,8 +190,8 @@ class DRLTrainer:
                 penalty_daily_dd=-1000.0,  # Catastrophic penalty
                 penalty_total_dd=-10000.0,  # Absolute catastrophic penalty
                 terminate_on_dd_breach=True,  # Terminate on violation
-                max_steps=1000,  # Max 1000 bars per episode
-                lookback_bars=200  # 200 bars of history for state
+                max_steps=1000,  # Max 1000 bars per episode (~16 hours at M1)
+                lookback_bars=200  # 200 bars of history for state (~3.3 hours)
             )
         
         self.env_config = env_config
@@ -290,25 +305,27 @@ class DRLTrainer:
         Returns:
             Episode statistics dict
         """
-        state = env.reset()
+        state, _ = env.reset()  # Gymnasium returns (obs, info)
         episode_reward = 0
         episode_length = 0
         done = False
+        truncated = False
+        actions_taken = []  # Track actions for debugging
         
-        while not done:
+        while not (done or truncated):
             # Select action with exploration noise
             action = self.agent.select_action(state, explore=True)
+            actions_taken.append(action)
             
             # Take step in environment
-            next_state, reward, done, info = env.step(action)
+            next_state, reward, done, truncated, info = env.step(action)  # Gymnasium returns 5 values
             
             # Store transition in replay buffer
             self.replay_buffer.add(state, action, reward, next_state, done)
             
             # Train agent if buffer has enough samples
             if len(self.replay_buffer) >= self.agent_config.batch_size:
-                batch = self.replay_buffer.sample(self.agent_config.batch_size)
-                self.agent.train(batch)
+                self.agent.train(self.replay_buffer, batch_size=self.agent_config.batch_size)
             
             # Update state
             state = next_state
@@ -324,6 +341,11 @@ class DRLTrainer:
             'win_rate': info.get('win_rate', 0.0),
             'trades': info.get('total_trades', 0)
         }
+        
+        # Debug: Log action statistics
+        if len(actions_taken) > 0:
+            actions_array = np.array(actions_taken)
+            logger.debug(f"Episode {episode} actions: mean={actions_array.mean(axis=0)}, std={actions_array.std(axis=0)}, shape={actions_array.shape}")
         
         return stats
     
@@ -355,14 +377,15 @@ class DRLTrainer:
         eval_wr = []
         
         for ep in range(eval_episodes):
-            state = val_env.reset()
+            state, _ = val_env.reset()  # ✅ Gymnasium unpacking
             done = False
+            truncated = False
             episode_reward = 0
             
-            while not done:
+            while not (done or truncated):  # ✅ Check both termination conditions
                 # Select action without exploration noise
                 action = self.agent.select_action(state, explore=False)
-                next_state, reward, done, info = val_env.step(action)
+                next_state, reward, done, truncated, info = val_env.step(action)  # ✅ Gymnasium 5 values
                 state = next_state
                 episode_reward += reward
             
@@ -569,12 +592,13 @@ def main():
     
     # Create agent config with CLI arguments
     agent_config = TD3Config(
-        state_dim=14,
-        action_dim=2,
+        state_dim=29,  # 🧠 Market Awareness: 24 (original) + 5 (VVR, Wick, Liquidity, Opportunity, Confidence)
+        action_dim=1,  # ✅ Single continuous action: position size [-1, 1]
         hidden_dim=args.hidden_dim,
         lr_actor=args.lr,
         lr_critic=args.lr,
-        batch_size=args.batch_size
+        batch_size=args.batch_size,
+        use_cbrl=True  # 🎲 Chaos-Based RL enabled by default
     )
     
     # Initialize trainer

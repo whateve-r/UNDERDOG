@@ -1,12 +1,97 @@
 # 🚀 UNDERDOG Trading System - Status Report
 
-**Date**: October 20, 2025  
-**Phase**: 4.2 - Prometheus Instrumentation  
-**Status**: ✅ **COMPLETE**
+**Date**: October 23, 2025  
+**Phase**: CRITICAL DECISION POINT - TD3 vs MTF-MARL  
+**Status**: ⏳ **AWAITING QUICK TEST RESULTS**
 
 ---
 
-## 📊 What We Just Completed
+## � BREAKING UPDATE: CONSULTANT VALIDATION (Oct 23, 2025)
+
+### **Scientific Papers Confirm MTF-MARL Architecture** 🎓
+
+Un consultor especializado en Deep RL ha **VALIDADO** nuestra arquitectura propuesta con referencias científicas concretas:
+
+#### **Papers Clave:**
+1. **2405.19982v1.pdf** - "DRL for Forex... Multi-Agent Asynchronous Distribution"
+   - ✅ Confirma: **A3C > PPO** para multi-currency
+   - ✅ Confirma: Entrenamiento asíncrono crítico para 4+ símbolos
+
+2. **ALA2017_Gupta.pdf** - "Cooperative Multi-Agent Control"
+   - ✅ Confirma: **CTDE** (Centralized Training, Decentralized Execution)
+
+3. **3745133.3745185.pdf** - "TD3 for Stock Trading"
+   - 🆕 **Turbulence Index:** Detectar estrés de mercado
+   - 🆕 **50+ indicators:** Expandir state de 24D a 30-40D
+   - 🆕 **Reward Clipping:** Penalizar pérdidas persistentes
+
+### **ARQUITECTURA CONFIRMADA:**
+
+```
+NIVEL 2 (Meta-Agente):
+   A3C sin lock → Coordinador Centralizado
+   Meta-State: 15D (DD global, Turbulence global, Balances)
+   Meta-Action: ℝ⁴ (risk limits para cada par)
+        ↓
+NIVEL 1 (Agentes Locales):
+   4× TD3 → Ejecución Descentralizada
+   State: 28D (24D base + Turbulence + DXY + Correlation + VIX)
+   Action: ℝ¹ (posición en [-1, 1], clipped por Meta-Action)
+```
+
+### **🔴 CRITICAL FINDINGS:**
+
+#### **1. NO IMPLEMENTAR MARL AÚN**
+- **Razón:** MARL añade ~3 semanas de desarrollo
+- **Estrategia:** Primero mejorar TD3 con features avanzadas
+- **Decision:** Esperar resultados del Quick Test (100 ep)
+
+#### **2. Mejoras Prioritarias para TD3** (ANTES que MARL)
+
+| Prioridad | Feature | Esfuerzo | Beneficio |
+|-----------|---------|----------|-----------|
+| 🔴 ALTA | Turbulence Index | 2-3h | Reduce DD en eventos noticiosos |
+| 🔴 ALTA | Reward con Sharpe | 2h | Alinea con objetivo Prop Firm |
+| 🟡 MEDIA | Reward Clipping | 1h | Evita erosión gradual de capital |
+| 🟡 MEDIA | DXY Feature | 3-4h | Awareness inter-mercado |
+
+#### **3. Decision Tree:**
+
+```
+Quick Test Results (100 ep)
+        ↓
+┌───────┴────────┐
+│   DD < 5%?     │
+│   Sharpe > 0.5?│
+└───────┬────────┘
+        ↓
+    ┌───┴───┐
+    │  SÍ   │ → Full Training TD3 (2000 ep)
+    └───────┘
+        │
+    ┌───┴───┐
+    │  NO   │ → Implementar mejoras (Turbulence + Sharpe)
+    └───────┘
+        ↓
+    2nd Quick Test (100 ep)
+        ↓
+    ¿Mejora significativa?
+        ↓
+    ┌───┴───┐
+    │  SÍ   │ → Full Training TD3 mejorado
+    └───────┘
+        │
+    ┌───┴───┐
+    │  NO   │ → Implementar MARL (3 semanas)
+    └───────┘
+```
+
+### **📄 Documentación Completa:**
+Ver: `docs/CONSULTANT_RECOMMENDATIONS_MTF_MARL.md` (70+ páginas con implementación detallada)
+
+---
+
+## �📊 What We Just Completed
 
 ### **All 7 EAs Instrumented with Prometheus** 🎉
 
@@ -101,25 +186,132 @@ curl http://localhost:8000/metrics | Select-String "ea_status"
 
 ---
 
-## 📋 Próximos Pasos (No Urgente)
+## 📋 Próximos Pasos (ACTUALIZADO - Oct 23)
 
-### **Paso 4: Configuración de Prometheus** (~30 minutos)
-- Crear `docker/prometheus.yml`
-- Configurar scrape del puerto 8000
+### 🔥 **PRIORIDAD ABSOLUTA: Monitorear Quick Test** (AHORA)
 
-### **Paso 5: Dashboards de Grafana** (~2-3 horas)
-- Dashboard 1: Vista General del Portfolio
-- Dashboard 2: Matriz de Performance de EAs
-- Dashboard 3: Posiciones Abiertas
+**Status:** ⏳ Terminal perdido, proceso posiblemente corriendo
 
-### **Paso 6: Conectar Streamlit** (~3-4 horas)
-- Reemplazar datos dummy en `streamlit_backtest.py`
-- Conectar al motor de backtesting real
+**Acciones:**
+1. Verificar si proceso Python sigue activo:
+   ```powershell
+   Get-Process python | Where-Object {$_.Path -like "*poetry*"}
+   ```
 
-### **Paso 7: Testing de Integración** (~1-2 horas)
-- Lanzar Docker (Prometheus + Grafana)
-- Ejecutar 1 EA
-- Verificar flujo de métricas
+2. Buscar archivos de logs:
+   ```powershell
+   Get-ChildItem data/test_results/ -Recurse | Sort-Object LastWriteTime -Descending | Select-Object -First 5
+   ```
+
+3. Si proceso terminó, revisar último archivo de resultados
+
+**Métricas Clave a Analizar:**
+- **DD violation rate:** < 5% = ✅ continuar TD3
+- **Sharpe ratio:** > 0.5 = ✅ prometedor
+- **Win rate:** > 40% = ✅ aceptable para agente no entrenado
+
+---
+
+### 🔴 **PASO 1: Implementar Turbulence Index** (SI DD > 10%)
+
+**Archivo:** `underdog/rl/environments.py`  
+**Esfuerzo:** 2-3 horas
+
+**Implementación:**
+```python
+def _calculate_turbulence_local(self, window: int = 20) -> float:
+    """Calculate volatility-based turbulence index"""
+    if len(self.returns_history) < window:
+        return 0.0
+    recent_returns = np.array(self.returns_history[-window:])
+    turbulence = np.std(recent_returns)
+    return np.clip(turbulence / 0.03, 0.0, 1.0)
+```
+
+**State Update:** `state_dim: 24 → 25` (añadir turbulence_local)
+
+**Beneficio:** Red aprende a cerrar/reducir posiciones cuando volatilidad es extrema
+
+---
+
+### 🔴 **PASO 2: Reward con Sharpe Ratio** (SI SHARPE < 0)
+
+**Archivo:** `underdog/rl/environments.py`  
+**Esfuerzo:** 2 horas
+
+**Implementación:**
+```python
+def _calculate_final_reward(self) -> float:
+    """Episode reward with Sharpe component"""
+    total_return = (self.equity - self.initial_balance) / self.initial_balance
+    cmdp_penalty = 0.0
+    if self.daily_dd_ratio > self.config.max_daily_dd_pct:
+        cmdp_penalty += 1000.0
+    if self.total_dd_ratio > self.config.max_total_dd_pct:
+        cmdp_penalty += 10000.0
+    
+    sharpe = self._get_info().get('sharpe_ratio', 0.0)
+    
+    # Weighted combination
+    lambda_dd = 0.5
+    mu_sharpe = 0.3
+    return total_return - lambda_dd * cmdp_penalty + mu_sharpe * sharpe
+```
+
+**Beneficio:** Alineación directa con objetivo Prop Firm (alto Sharpe, bajo DD)
+
+---
+
+### 🟡 **PASO 3: Reward Clipping** (SI PÉRDIDAS PERSISTENTES)
+
+**Archivo:** `underdog/rl/environments.py`  
+**Esfuerzo:** 1 hora
+
+**Implementación:**
+```python
+def _calculate_reward(self) -> float:
+    """Step reward with asymmetric clipping"""
+    reward = (self.equity - self.equity_history[-1]) / self.initial_balance
+    
+    # Penalize persistent small losses (spread accumulation)
+    if reward <= -0.01:
+        reward = -0.05  # 5x penalty
+    
+    # CMDP penalties...
+    return reward
+```
+
+**Beneficio:** Evita erosión gradual de capital por indecisión
+
+---
+
+### ⏳ **PASO 4: MARL Implementation** (SOLO SI TD3 MEJORADO NO SUFICIENTE)
+
+**Archivos a Crear:**
+- `underdog/rl/multi_asset_env.py` (500+ líneas)
+- `underdog/rl/meta_agent.py` (200+ líneas)  
+- `scripts/train_marl_agent.py` (400+ líneas)
+
+**Esfuerzo:** 2-3 semanas completas
+
+**Arquitectura:**
+- Meta-Agente: A3C sin lock (Coordinador)
+- 4× Agentes TD3 (EURUSD, GBPUSD, USDJPY, USDCHF)
+- Meta-Action: Risk limits ∈ [0, 1]⁴
+
+**⚠️ CRITICAL:** NO iniciar hasta:
+1. Validar Quick Test
+2. Implementar mejoras TD3 (Turbulence + Sharpe)
+3. Confirmar que TD3 mejorado NO es suficiente
+
+---
+
+### 🟢 **BACKLOG: Monitoring (PAUSADO)**
+
+Configuración de Prometheus y Grafana **EN PAUSA** hasta:
+- Decidir arquitectura final (TD3 vs MARL)
+- Completar training del modelo elegido
+- Tener métricas reales para visualizar
 
 ---
 
@@ -136,42 +328,90 @@ curl http://localhost:8000/metrics | Select-String "ea_status"
 
 ---
 
-## 🎯 Beneficios Clave
+## 📈 Cronograma Revisado (Post-Consultor)
 
-### **1. Monitoreo en Tiempo Real**
-- Ver estado de todas las EAs en un dashboard
-- Recibir alertas cuando se generan señales
-- Tracking de performance sub-milisegundo
+### **SEMANA 1 (ACTUAL - Oct 23-27)**
+```
+[⏳] Completar Quick Test TD3 (100 ep)
+[⏳] Analizar DD, Sharpe, WR
+[🎯] DECISION POINT 1: TD3 suficiente?
+```
 
-### **2. Análisis de Performance**
-- Histogramas de latencia detallados
-- Seguimiento de tasas de ganancia por EA
-- Visualización de confidence scores
+### **SEMANA 2 (Oct 28 - Nov 3) - SI QUICK TEST PROMETEDOR**
+```
+[🔴] Turbulence Index (2-3h)
+[🔴] Reward con Sharpe (2h)
+[🟡] Reward Clipping (1h)
+[🟡] DXY Feature (3-4h)
+[⏳] 2nd Quick Test mejorado (100 ep)
+[🎯] DECISION POINT 2: ¿Mejora significativa?
+```
 
-### **3. Production-Ready**
-- Stack estándar de la industria (Prometheus + Grafana)
-- Dashboards profesionales sin código
-- Base de datos time-series para análisis histórico
+### **SEMANA 3-4 (Nov 4-17) - SOLO SI TD3 MEJORADO NO SUFICIENTE**
+```
+[🆕] MultiAssetEnv (2-3 días)
+[🆕] A3CMetaAgent (3-4 días)
+[🆕] Training Loop MARL (2-3 días)
+[⏳] Quick Test MARL (100 ep, 4 símbolos)
+```
 
-### **4. Future-Proof**
-- Soporte multi-broker (etiquetas: broker, account_id)
-- Métricas de compliance para Prop Firms (FTMO, MyForexFunds)
-- Escalable a 100+ EAs sin modificaciones
+### **SEMANA 5-8 (Nov 18 - Dic 15)**
+```
+[⏳] Full Training (2000 ep) - Arquitectura elegida
+[⏳] Hyperparameter Tuning (Optuna)
+[⏳] Unit Tests (70% coverage)
+[⏳] Paper Trading (30 días)
+```
+
+### **SEMANA 9-12 (Dic 16 - Ene 12)**
+```
+[⏳] FTMO Demo Challenge Fase 1 (30 días)
+[⏳] FTMO Demo Challenge Fase 2 (30 días)
+[🎯] Funded Account Target: €2-4k/mes
+```
+
+**Timeline Original:** 60-90 días  
+**Timeline Actualizado (con MARL):** 90-120 días  
+**Timeline Actualizado (sin MARL):** 75-100 días ← MÁS PROBABLE
+
+---
+
+## 🎯 Métricas de Éxito
+
+### **Quick Test (100 ep) - Umbrales de Decisión:**
+| Métrica | ✅ Excelente | 🟡 Aceptable | 🔴 Requiere Mejoras |
+|---------|-------------|-------------|-------------------|
+| **DD Violation Rate** | < 3% | 3-8% | > 8% |
+| **Sharpe Ratio** | > 1.0 | 0.3-1.0 | < 0.3 |
+| **Win Rate** | > 50% | 35-50% | < 35% |
+| **Max DD** | < 3% | 3-7% | > 7% |
+
+### **Prop Firm Requirements (FTMO):**
+- **Phase 1:** 8% profit, <5% daily DD, <10% total DD (30 días)
+- **Phase 2:** 5% profit, <5% daily DD, <10% total DD (30 días)
+- **Funded:** Profit split 80-90%, no time limit
 
 ---
 
 ## 🎉 Conclusión
 
-**Phase 4.2 está COMPLETA**! Las 7 EAs están instrumentadas y listas para monitoreo en tiempo real con Prometheus + Grafana.
+**Phase 4.2 está COMPLETA** ✅  
+**Fases 1-3 están COMPLETAS** ✅  
+**TD3 System FUNCIONAL** ✅ (post 13 bug fixes)
 
-**Total del Proyecto (Fases 1-4.2)**:
-- 11,000+ líneas de código
-- 565x speedup promedio (TA-Lib)
-- 7 EAs optimizadas con TA-Lib
-- Sistema de monitoreo profesional ✅
+**CRITICAL DECISION AHEAD:**
+- ⏳ Esperando Quick Test results
+- 🔴 Implementar mejoras TD3 (Turbulence, Sharpe) si necesario
+- ⏳ Solo implementar MARL si TD3 mejorado no es suficiente
 
-**Próximo hito**: Configurar Prometheus y crear dashboards de Grafana.
+**Business Goal:** €2,000-4,000/mes en Prop Firm funded accounts  
+**Timeline:** 75-120 días dependiendo de arquitectura final
+
+**Referencias:**
+- 📄 `docs/CONSULTANT_RECOMMENDATIONS_MTF_MARL.md` (detalles implementación)
+- 📄 `docs/AUDIT_REPORT_2025_10_23.md` (análisis completo del proyecto)
+- 📄 `docs/PROJECT_AUDIT_2025_10_21.md` (auditoría anterior)
 
 ---
 
-**¿Alguna pregunta o quieres seguir con los próximos pasos?** 🚀
+**Next Action:** ⏰ Verificar status del Quick Test (100 ep) 🚀

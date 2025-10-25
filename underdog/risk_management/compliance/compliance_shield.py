@@ -34,7 +34,7 @@ class SafetyConstraints:
     
     # Position limits
     max_positions: int = 2
-    max_lot_size: float = 0.10  # Max lot per trade
+    max_lot_size: float = 0.1  # Max lot per trade (0.1 lot = $1k notional with 100:1 leverage)
     min_lot_size: float = 0.01
     
     # Risk per trade
@@ -216,8 +216,8 @@ class PropFirmSafetyShield:
             corrected_action['risk_pct'] = self.constraints.max_risk_per_trade_pct
             
             logger.warning(
-                f"Reduced lot size: {lot_size:.3f} → {corrected_action['lot_size']:.3f} "
-                f"(risk: {risk_pct*100:.2f}% → {corrected_action['risk_pct']*100:.2f}%)"
+                f"Reduced lot size: {lot_size:.3f} to {corrected_action['lot_size']:.3f} "
+                f"(risk: {risk_pct*100:.2f}% to {corrected_action['risk_pct']*100:.2f}%)"
             )
         
         # Check lot size bounds
